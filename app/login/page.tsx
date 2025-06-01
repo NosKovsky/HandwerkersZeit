@@ -7,7 +7,14 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { User, Lock, Mail, UserPlus, LogIn } from "lucide-react"
@@ -21,13 +28,16 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [mounted, setMounted] = useState(false)
 
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, user } = useAuth()
   const router = useRouter()
 
-  // Prevent hydration mismatch
+  // Wenn bereits eingeloggt, weiterleiten
   useEffect(() => {
     setMounted(true)
-  }, [])
+    if (user) {
+      router.push("/dashboard")
+    }
+  }, [user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,14 +48,14 @@ export default function LoginPage() {
       if (isSignUp) {
         const { error } = await signUp(email, password, name)
         if (error) throw error
-        setError("Registrierung erfolgreich! Bitte bestätigen Sie Ihre E-Mail.")
+        setError("Registrierung erfolgreich! Bitte E-Mail bestätigen.")
       } else {
         const { error } = await signIn(email, password)
         if (error) throw error
-        router.push("/")
+        router.push("/dashboard") // ✅ Weiterleitung nach erfolgreichem Login
       }
-    } catch (error: any) {
-      setError(error.message)
+    } catch (err: any) {
+      setError(err.message)
     } finally {
       setLoading(false)
     }
@@ -54,101 +64,93 @@ export default function LoginPage() {
   if (!mounted) return null
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background dark:gradient-bg py-12 px-4 sm:px-6 lg:px-8">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">Bauleiter</h1>
-          <p className="mt-2 text-muted-foreground">Professionelles Dashboard für Bauleiter</p>
-        </div>
-
-        <Card className="dark:glass-card border-border shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">{isSignUp ? "Registrierung" : "Anmeldung"}</CardTitle>
-            <CardDescription className="text-center">
-              {isSignUp ? "Erstellen Sie Ihr Bauleiter-Konto" : "Melden Sie sich in Ihrem Konto an"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    Name
-                  </Label>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center text-2xl">
+            {isSignUp ? "Registrieren" : "Anmelden"}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {isSignUp
+              ? "Erstelle ein neues Konto für HandwerkersZeit."
+              : "Melde dich mit deinem Konto an, um fortzufahren."}
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {isSignUp && (
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <div className="flex items-center gap-2">
+                  <User size={16} />
                   <Input
                     id="name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    className="bg-background/50 border-border"
                   />
                 </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center">
-                  <Mail className="mr-2 h-4 w-4" />
-                  E-Mail
-                </Label>
+              </div>
+            )}
+            <div>
+              <Label htmlFor="email">E-Mail</Label>
+              <div className="flex items-center gap-2">
+                <Mail size={16} />
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-background/50 border-border"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="flex items-center">
-                  <Lock className="mr-2 h-4 w-4" />
-                  Passwort
-                </Label>
+            </div>
+            <div>
+              <Label htmlFor="password">Passwort</Label>
+              <div className="flex items-center gap-2">
+                <Lock size={16} />
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-background/50 border-border"
                 />
               </div>
-
-              {error && (
-                <Alert variant="destructive" className="animate-fade-in">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : isSignUp ? (
-                  <>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Registrieren
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Anmelden
-                  </>
-                )}
-              </Button>
-            </form>
+            </div>
           </CardContent>
-          <CardFooter>
-            <Button variant="link" onClick={() => setIsSignUp(!isSignUp)} className="w-full text-sm">
-              {isSignUp ? "Bereits ein Konto? Hier anmelden" : "Noch kein Konto? Hier registrieren"}
+          <CardFooter className="flex flex-col gap-3">
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Wird verarbeitet..." : isSignUp ? "Registrieren" : "Anmelden"}
             </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="w-full"
+            >
+              {isSignUp ? (
+                <>
+                  <LogIn size={16} className="mr-1" /> Bereits registriert? Jetzt anmelden
+                </>
+              ) : (
+                <>
+                  <UserPlus size={16} className="mr-1" /> Noch kein Konto? Jetzt registrieren
+                </>
+              )}
+            </Button>
+            <div className="mt-4 w-full flex justify-center">
+              <ThemeToggle />
+            </div>
           </CardFooter>
-        </Card>
-      </div>
+        </form>
+      </Card>
     </div>
   )
 }
