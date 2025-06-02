@@ -1,36 +1,14 @@
 import { createBrowserClient } from "@supabase/ssr"
-import type { Database } from "@/lib/supabase/database.types"
+import type { Database } from "./database.types"
 
 export function createSupabaseBrowserClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return createBrowserClient<Database>(
+    "https://mpwsenysgufpfsinyjjh.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wd3NlbnlzZ3VmcGZzaW55ampoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4ODk3NDcsImV4cCI6MjA2NDQ2NTc0N30.z5vTUjbWrYHFsgc2-RizpBgeFRC8wno8x1_kCfhQq6Q",
+  )
+}
 
-  if (!supabaseUrl) {
-    console.error("Supabase URL is missing. NEXT_PUBLIC_SUPABASE_URL is not set or not accessible on the client.")
-    throw new Error(
-      "Client-side Supabase URL is missing. Ensure NEXT_PUBLIC_SUPABASE_URL is correctly set and accessible in your environment.",
-    )
-  }
-
-  if (!supabaseAnonKey) {
-    console.error(
-      "Supabase Anon Key is missing. NEXT_PUBLIC_SUPABASE_ANON_KEY is not set or not accessible on the client.",
-    )
-    throw new Error(
-      "Client-side Supabase Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_ANON_KEY is correctly set and accessible in your environment.",
-    )
-  }
-
-  // Basic check for URL validity
-  try {
-    new URL(supabaseUrl)
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : String(e)
-    console.error(`Invalid Supabase URL format: '${supabaseUrl}'. Error: ${errorMessage}`)
-    throw new Error(
-      `Invalid Supabase URL format: '${supabaseUrl}'. Please check your NEXT_PUBLIC_SUPABASE_URL environment variable. Original error: ${errorMessage}`,
-    )
-  }
-
-  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+// Zusätzlicher Export für Kompatibilität
+export function createSupabaseClient() {
+  return createSupabaseBrowserClient()
 }

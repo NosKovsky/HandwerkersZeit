@@ -1,35 +1,25 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr"
+import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "./database.types"
 
-// Die ursprüngliche Funktion mit dem erwarteten Namen
-export function createSupabaseServerClient(cookieStore?: ReturnType<typeof cookies>) {
-  const store = cookieStore || cookies()
+export function createSupabaseServerClient() {
+  const cookieStore = cookies()
+
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    "https://mpwsenysgufpfsinyjjh.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wd3NlbnlzZ3VmcGZzaW55ampoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4ODk3NDcsImV4cCI6MjA2NDQ2NTc0N30.z5vTUjbWrYHFsgc2-RizpBgeFRC8wno8x1_kCfhQq6Q",
     {
       cookies: {
-        get(name: string) {
-          try {
-            return store.get(name)?.value
-          } catch (error) {
-            console.error("Fehler beim Abrufen des Cookies:", error)
-            return undefined
-          }
+        getAll() {
+          return cookieStore.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet) {
           try {
-            store.set({ name, value, ...options })
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
           } catch (error) {
-            console.error("Fehler beim Setzen des Cookies:", error)
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            store.set({ name, value: "", ...options })
-          } catch (error) {
-            console.error("Fehler beim Löschen des Cookies:", error)
+            console.error("Fehler beim Setzen der Cookies:", error)
           }
         },
       },
@@ -37,67 +27,36 @@ export function createSupabaseServerClient(cookieStore?: ReturnType<typeof cooki
   )
 }
 
-// Die ursprüngliche Funktion mit dem erwarteten Namen
 export function createSupabaseRouteHandlerClient() {
   const cookieStore = cookies()
+
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    "https://mpwsenysgufpfsinyjjh.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wd3NlbnlzZ3VmcGZzaW55ampoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4ODk3NDcsImV4cCI6MjA2NDQ2NTc0N30.z5vTUjbWrYHFsgc2-RizpBgeFRC8wno8x1_kCfhQq6Q",
     {
       cookies: {
-        get(name: string) {
-          try {
-            return cookieStore.get(name)?.value
-          } catch (error) {
-            console.error("Fehler beim Abrufen des Cookies:", error)
-            return undefined
-          }
+        getAll() {
+          return cookieStore.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options })
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
           } catch (error) {
-            console.error("Fehler beim Setzen des Cookies:", error)
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: "", ...options })
-          } catch (error) {
-            console.error("Fehler beim Löschen des Cookies:", error)
+            console.error("Fehler beim Setzen der Cookies:", error)
           }
         },
       },
     },
   )
-}
-
-// Hilfsfunktion mit Timeout-Schutz für die Session
-export async function getServerSession() {
-  const supabase = createSupabaseServerClient()
-
-  try {
-    const sessionPromise = supabase.auth.getSession()
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Session timeout")), 2000))
-
-    const { data } = (await Promise.race([
-      sessionPromise,
-      timeoutPromise.then(() => ({ data: { session: null } })),
-    ])) as { data: { session: any } }
-
-    return data.session
-  } catch (error) {
-    console.error("Fehler beim Abrufen der Session:", error)
-    return null
-  }
 }
 
 export async function createSupabaseAdminClient() {
   const { createClient } = await import("@supabase/supabase-js")
-  // This client is meant for server-side operations that require service_role key
-  // Ensure SUPABASE_SERVICE_ROLE_KEY is set in your environment variables
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set for admin client.")
-  }
-  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+  return createClient<Database>(
+    "https://mpwsenysgufpfsinyjjh.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wd3NlbnlzZ3VmcGZzaW55ampoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODg4OTc0NywiZXhwIjoyMDY0NDY1NzQ3fQ.piT0SCxr0x3nHUidMbWWxK8Vle3EI1uz6bD0seaGkG0",
+  )
 }

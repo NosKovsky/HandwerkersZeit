@@ -3,13 +3,33 @@ import { createServerClient } from "@supabase/ssr"
 import type { Database } from "@/lib/supabase/database.types"
 
 // Pfade, die ohne Login erreichbar sind
-const PUBLIC_PATHS = ["/login", "/register", "/auth/callback", "/api", "/"]
+const PUBLIC_PATHS = [
+  "/login",
+  "/register",
+  "/auth/callback",
+  "/api",
+  "/",
+  "/dashboard",
+  "/projects",
+  "/entries",
+  "/materials",
+  "/receipts",
+  "/tasks",
+  "/gallery",
+  "/settings",
+  "/time-tracking",
+]
 // Pfade, die nur für Admins sind
 const ADMIN_PATHS = ["/admin"]
 
 export async function middleware(request: NextRequest) {
   try {
-    const response = NextResponse.next()
+    let response = NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
+
     const { pathname } = request.nextUrl
 
     // Statische Ressourcen überspringen
@@ -26,25 +46,35 @@ export async function middleware(request: NextRequest) {
       return response
     }
 
-    // Supabase-Client erstellen
+    // Supabase-Client erstellen mit korrekter Cookie-Implementierung
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get: (name) => request.cookies.get(name)?.value,
-          set: (name, value, options) => response.cookies.set(name, value, options),
-          remove: (name, options) => response.cookies.delete(name, options),
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
+          },
         },
       },
     )
 
-    // Session abrufen - korrekte Methode verwenden
-    const { data } = await supabase.auth.getSession()
-    const session = data.session
+    // User abrufen statt Session
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-    // Wenn keine Session vorhanden ist, zur Login-Seite umleiten
-    if (!session) {
+    // Wenn kein User vorhanden ist, zur Login-Seite umleiten
+    if (!user) {
       const redirectUrl = new URL("/login", request.url)
       redirectUrl.searchParams.set("redirect", pathname)
       return NextResponse.redirect(redirectUrl)
@@ -53,7 +83,7 @@ export async function middleware(request: NextRequest) {
     // Admin-Routen-Schutz
     if (ADMIN_PATHS.some((path) => pathname.startsWith(path))) {
       try {
-        const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single()
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
 
         if (!profile || profile.role !== "admin") {
           return NextResponse.redirect(new URL("/dashboard?error=unauthorized", request.url))
