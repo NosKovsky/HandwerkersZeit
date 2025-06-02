@@ -67,22 +67,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, name: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    if (data.user && !error) {
-      // Create profile
-      await supabase.from("profiles").insert({
-        id: data.user.id,
+    try {
+      const { data, error } = await supabase.auth.signUp({
         email,
-        name,
-        role: "user",
+        password,
+        options: {
+          data: {
+            name: name,
+          },
+        },
       })
-    }
 
-    return { data, error }
+      if (error) {
+        console.error("Signup error:", error)
+        throw error
+      }
+
+      // Warte kurz und versuche das Profil zu erstellen falls der Trigger fehlschlägt
+      if (data.user && !error) {
+        setTimeout(async () => {
+          try {
+            await supabase.from("profiles").upsert(
+              {
+                id: data.user.id,
+                email,
+                name,
+                role: "user",
+              },
+              { onConflict: "id" },
+            )
+          } catch (profileError) {
+            console.log("Profile creation fallback:", profileError)
+          }
+        }, 1000)
+      }
+
+      return { data, error }
+    } catch (error) {
+      console.error("Auth signup error:", error)
+      return { data: null, error }
+    }
   }
 
   const signOut = async () => {
