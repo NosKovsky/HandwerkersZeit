@@ -8,7 +8,6 @@ export function createSupabaseBrowserClient() {
   )
 }
 
-// Zusätzlicher Export für Kompatibilität
 export function createSupabaseClient() {
   return createSupabaseBrowserClient()
 }
