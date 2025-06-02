@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
-  },
+  serverExternalPackages: ['@supabase/supabase-js'],
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -10,7 +8,14 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['mpwsenysgufpfsinyjjh.supabase.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'mpwsenysgufpfsinyjjh.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
     unoptimized: true,
   },
 }
