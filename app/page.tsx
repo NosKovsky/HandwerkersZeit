@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Briefcase } from "lucide-react" // Oder ein anderes passendes Icon
+import { Briefcase } from "lucide-react"
 
 export default function HomePage() {
   const { user, loadingInitial } = useAuth()
