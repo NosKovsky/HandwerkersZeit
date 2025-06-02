@@ -1,71 +1,84 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { NextResponse, type NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+import type { Database } from "@/lib/supabase/database.types"
 
-// Statische Assets und API-Routen ausschließen
-export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     * - api (API routes)
-     */
-    {
-      source: "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
-      missing: [
-        { type: "header", key: "next-router-prefetch" },
-        { type: "header", key: "purpose", value: "prefetch" },
-      ],
-    },
-  ],
-}
+// Pfade, die ohne Login erreichbar sind
+const PUBLIC_PATHS = ["/login", "/register", "/auth/callback", "/api", "/"]
+// Pfade, die nur für Admins sind
+const ADMIN_PATHS = ["/admin"]
 
 export async function middleware(request: NextRequest) {
   try {
-    // Statische Ressourcen überspringen
+    const response = NextResponse.next()
     const { pathname } = request.nextUrl
-    if (pathname.startsWith("/_next") || pathname.startsWith("/favicon.ico") || pathname.startsWith("/public")) {
-      return NextResponse.next()
+
+    // Statische Ressourcen überspringen
+    if (
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/favicon.ico") ||
+      pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js)$/)
+    ) {
+      return response
     }
 
-    // Öffentliche Routen, die ohne Authentifizierung zugänglich sind
-    const publicRoutes = ["/login", "/register", "/"]
-    if (publicRoutes.includes(pathname)) {
-      return NextResponse.next()
+    // Öffentliche Pfade überspringen
+    if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
+      return response
     }
 
     // Supabase-Client erstellen
-    const supabase = createSupabaseServerClient()
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get: (name) => request.cookies.get(name)?.value,
+          set: (name, value, options) => response.cookies.set(name, value, options),
+          remove: (name, options) => response.cookies.delete(name, options),
+        },
+      },
+    )
 
-    // Session mit Timeout-Schutz abrufen
-    const sessionPromise = supabase.auth.getSession()
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Session timeout")), 2000))
-
-    const { data } = (await Promise.race([
-      sessionPromise,
-      timeoutPromise.then(() => ({ data: { session: null } })),
-    ])) as { data: { session: any } }
+    // Session abrufen - korrekte Methode verwenden
+    const { data } = await supabase.auth.getSession()
+    const session = data.session
 
     // Wenn keine Session vorhanden ist, zur Login-Seite umleiten
-    if (!data.session) {
+    if (!session) {
       const redirectUrl = new URL("/login", request.url)
       redirectUrl.searchParams.set("redirect", pathname)
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Wenn alles in Ordnung ist, weiter zur angeforderten Seite
-    return NextResponse.next()
+    // Admin-Routen-Schutz
+    if (ADMIN_PATHS.some((path) => pathname.startsWith(path))) {
+      try {
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single()
+
+        if (!profile || profile.role !== "admin") {
+          return NextResponse.redirect(new URL("/dashboard?error=unauthorized", request.url))
+        }
+      } catch (error) {
+        console.error("Fehler beim Prüfen der Admin-Rechte:", error)
+        return NextResponse.redirect(new URL("/dashboard?error=admin_check_failed", request.url))
+      }
+    }
+
+    return response
   } catch (error) {
     console.error("Middleware-Fehler:", error)
 
-    // Bei einem Fehler zur Login-Seite umleiten
+    // Bei einem Fehler zur Login-Seite umleiten, außer bei öffentlichen Pfaden
     const { pathname } = request.nextUrl
-    const redirectUrl = new URL("/login", request.url)
-    redirectUrl.searchParams.set("redirect", pathname)
-    redirectUrl.searchParams.set("error", "session_error")
-    return NextResponse.redirect(redirectUrl)
+    if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
+      return NextResponse.next()
+    }
+
+    return NextResponse.redirect(new URL("/login?error=middleware_failed", request.url))
   }
+}
+
+// Korrekter Matcher als Array von Strings
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|public/).*)"],
 }
