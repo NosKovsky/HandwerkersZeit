@@ -15,7 +15,6 @@ export default async function HomePage() {
       redirect("/login")
     }
   } catch (error) {
-    // Bei Fehlern zur Login-Seite weiterleiten
     redirect("/login")
   }
 }

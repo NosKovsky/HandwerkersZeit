@@ -3,107 +3,121 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
+import Link from "next/link"
 
 export function RegisterForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const { signUp } = useAuth()
+  const { signUpWithEmail } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
 
-    const { error } = await signUp(email, password, fullName)
+    try {
+      const { error } = await signUpWithEmail(email, password, fullName)
 
-    if (error) {
-      setError(error.message)
-    } else {
-      setSuccess(true)
+      if (error) {
+        setError(error.message)
+      } else {
+        setSuccess(true)
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 2000)
+      }
+    } catch (err) {
+      setError("Ein unerwarteter Fehler ist aufgetreten")
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   if (success) {
     return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Registrierung erfolgreich!</CardTitle>
-          <CardDescription>Bitte überprüfen Sie Ihre E-Mail für die Bestätigung.</CardDescription>
-        </CardHeader>
-      </Card>
+      <Alert>
+        <AlertDescription>Registrierung erfolgreich! Sie werden automatisch weitergeleitet...</AlertDescription>
+      </Alert>
     )
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Registrieren</CardTitle>
-        <CardDescription>Erstellen Sie ein neues AI Work Tracker Konto</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Vollständiger Name</Label>
-            <Input
-              id="fullName"
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              disabled={loading}
-            />
-          </div>
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="fullName">Vollständiger Name</Label>
+          <Input
+            id="fullName"
+            name="fullName"
+            type="text"
+            autoComplete="name"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="mt-1"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">E-Mail</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-            />
-          </div>
+        <div>
+          <Label htmlFor="email">E-Mail-Adresse</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Passwort</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              minLength={6}
-            />
-          </div>
+        <div>
+          <Label htmlFor="password">Passwort</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+      </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Registrieren
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <div>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Wird registriert..." : "Registrieren"}
+        </Button>
+      </div>
+
+      <div className="text-center">
+        <p className="text-sm text-gray-600">
+          Bereits ein Konto?{" "}
+          <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            Hier anmelden
+          </Link>
+        </p>
+      </div>
+    </form>
   )
 }

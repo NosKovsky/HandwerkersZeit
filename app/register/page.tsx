@@ -15,11 +15,10 @@ import Link from "next/link"
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [successMessage, setSuccessMessage] = useState("")
+  const [success, setSuccess] = useState(false)
   const { signUpWithEmail, user, loadingInitial } = useAuth()
   const router = useRouter()
 
@@ -31,24 +30,15 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password !== confirmPassword) {
-      setError("Die Passwörter stimmen nicht überein.")
-      return
-    }
     setLoading(true)
     setError("")
-    setSuccessMessage("")
 
     const { error: signUpError } = await signUpWithEmail(email, password, fullName)
 
     if (signUpError) {
       setError(signUpError.message)
     } else {
-      setSuccessMessage(
-        "Registrierung erfolgreich! Bitte überprüfen Sie Ihre E-Mails zur Bestätigung und melden Sie sich dann an.",
-      )
-      // Optional: Automatische Weiterleitung nach kurzer Zeit oder manueller Klick
-      // router.push("/login")
+      setSuccess(true)
     }
     setLoading(false)
   }
@@ -61,22 +51,20 @@ export default function RegisterPage() {
     )
   }
 
-  if (successMessage) {
+  if (success) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
-            <Briefcase className="mx-auto h-10 w-10 mb-2 text-blue-600" />
-            <CardTitle className="text-2xl">Registrierung Erfolgreich</CardTitle>
+            <Briefcase className="mx-auto h-10 w-10 mb-2 text-green-600" />
+            <CardTitle className="text-2xl">Registrierung erfolgreich!</CardTitle>
+            <CardDescription>Bitte überprüfen Sie Ihre E-Mails und bestätigen Sie Ihr Konto.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Alert variant="default">
-              <AlertDescription>{successMessage}</AlertDescription>
-            </Alert>
-            <Button onClick={() => router.push("/login")} className="w-full mt-4">
-              Zum Login
-            </Button>
-          </CardContent>
+          <CardFooter>
+            <Link href="/login" className="w-full">
+              <Button className="w-full">Zur Anmeldung</Button>
+            </Link>
+          </CardFooter>
         </Card>
       </div>
     )
@@ -87,8 +75,8 @@ export default function RegisterPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <Briefcase className="mx-auto h-10 w-10 mb-2 text-blue-600" />
-          <CardTitle className="text-2xl">Konto Erstellen</CardTitle>
-          <CardDescription>Registrieren Sie sich für die Baustellendokumentation</CardDescription>
+          <CardTitle className="text-2xl">Registrieren</CardTitle>
+          <CardDescription>Erstellen Sie Ihr Konto für die Baustellendokumentation</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,22 +117,9 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
                 disabled={loading}
-                placeholder="Mind. 6 Zeichen"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
+                placeholder="••••••••"
                 minLength={6}
-                disabled={loading}
-                placeholder="Passwort wiederholen"
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
