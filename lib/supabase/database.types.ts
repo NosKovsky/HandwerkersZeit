@@ -9,6 +9,7 @@ export interface Database {
           email: string
           full_name: string | null
           role: "admin" | "user"
+          position: string | null // Neue Spalte für die Position
           created_at: string
           updated_at: string
         }
@@ -17,6 +18,7 @@ export interface Database {
           email: string
           full_name?: string | null
           role?: "admin" | "user"
+          position?: string | null // Neue Spalte für die Position
           created_at?: string
           updated_at?: string
         }
@@ -25,6 +27,7 @@ export interface Database {
           email?: string
           full_name?: string | null
           role?: "admin" | "user"
+          position?: string | null // Neue Spalte für die Position
           created_at?: string
           updated_at?: string
         }
