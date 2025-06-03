@@ -17,15 +17,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
-  const { signInWithEmail, user, loading } = useAuth()
+  const { signInWithEmail, user, loading, profile } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    // Nur weiterleiten, wenn wir sicher sind, dass der Benutzer eingeloggt ist
-    if (!loading && user && user.id) {
-      router.push("/dashboard")
+    // Nur weiterleiten wenn User UND Profile vorhanden
+    if (!loading && user && profile) {
+      // Kleine Verzögerung für saubere Navigation
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 100)
     }
-  }, [user, loading, router])
+  }, [user, profile, loading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

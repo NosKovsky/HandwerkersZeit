@@ -54,76 +54,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true
+    let timeoutId: NodeJS.Timeout
 
-    // Get initial session
-    const getInitialSession = async () => {
+    const initializeAuth = async () => {
       try {
-        setLoading(true) // Explizit Loading setzen
+        // Kurzes Timeout um Race Conditions zu vermeiden
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
         if (!mounted) return
 
-        console.log("Initial session:", session?.user?.email)
-
         if (session?.user) {
           setUser(session.user)
-          const profileData = await fetchProfile(session.user.id)
-          if (mounted) {
-            setProfile(profileData)
-          }
+          // Profile laden ohne await - läuft parallel
+          fetchProfile(session.user.id).then((profileData) => {
+            if (mounted) setProfile(profileData)
+          })
         } else {
-          // Explizit null setzen wenn keine Session
           setUser(null)
           setProfile(null)
         }
       } catch (error) {
-        console.error("Error getting initial session:", error)
+        console.error("Auth init error:", error)
         if (mounted) {
           setUser(null)
           setProfile(null)
         }
       } finally {
-        if (mounted) {
-          setLoading(false) // Wichtig: Loading auf false setzen
-        }
+        // Loading IMMER nach 500ms beenden - egal was passiert
+        timeoutId = setTimeout(() => {
+          if (mounted) setLoading(false)
+        }, 500)
       }
     }
 
-    getInitialSession()
+    initializeAuth()
 
-    // Listen for auth changes
+    // Auth listener - EINFACH gehalten
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return
-
-      console.log("Auth state changed:", event, session?.user?.email)
-
-      // Bei Auth-Änderungen explizit Loading setzen
-      setLoading(true)
 
       if (session?.user) {
         setUser(session.user)
-        const profileData = await fetchProfile(session.user.id)
-        if (mounted) {
-          setProfile(profileData)
-        }
+        fetchProfile(session.user.id).then((profileData) => {
+          if (mounted) setProfile(profileData)
+        })
       } else {
-        if (mounted) {
-          setUser(null)
-          setProfile(null)
-        }
-      }
-
-      if (mounted) {
-        setLoading(false) // Wichtig: Loading auf false setzen
+        setUser(null)
+        setProfile(null)
       }
     })
 
     return () => {
       mounted = false
+      if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
   }, [])
