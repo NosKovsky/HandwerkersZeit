@@ -1,10 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000', '*.vercel.app']
-    }
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -12,7 +7,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['cweozlkbvfwucyappnzp.supabase.co'],
     remotePatterns: [
       {
         protocol: 'https',

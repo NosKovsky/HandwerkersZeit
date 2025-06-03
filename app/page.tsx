@@ -37,10 +37,10 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Lade Anwendung...</p>
+          <p className="text-gray-600">Lade HandwerkersZeit...</p>
         </div>
       </div>
     )
@@ -48,7 +48,7 @@ export default function HomePage() {
 
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-gray-600">Weiterleitung zum Dashboard...</p>
@@ -100,7 +100,7 @@ export default function HomePage() {
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <Clock className="h-8 w-8 text-blue-600 mb-2" />
               <CardTitle>Zeiterfassung</CardTitle>
@@ -108,7 +108,7 @@ export default function HomePage() {
             </CardHeader>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <FileText className="h-8 w-8 text-green-600 mb-2" />
               <CardTitle>Materialverwaltung</CardTitle>
@@ -116,7 +116,7 @@ export default function HomePage() {
             </CardHeader>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <Camera className="h-8 w-8 text-purple-600 mb-2" />
               <CardTitle>Foto-Dokumentation</CardTitle>
@@ -124,7 +124,7 @@ export default function HomePage() {
             </CardHeader>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <Receipt className="h-8 w-8 text-orange-600 mb-2" />
               <CardTitle>Quittungen</CardTitle>
@@ -132,7 +132,7 @@ export default function HomePage() {
             </CardHeader>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <Users className="h-8 w-8 text-red-600 mb-2" />
               <CardTitle>Projektmanagement</CardTitle>
@@ -140,7 +140,7 @@ export default function HomePage() {
             </CardHeader>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <Briefcase className="h-8 w-8 text-blue-600 mb-2" />
               <CardTitle>Berichte</CardTitle>
@@ -151,7 +151,7 @@ export default function HomePage() {
 
         {/* CTA Section */}
         <div className="text-center">
-          <Card className="max-w-2xl mx-auto">
+          <Card className="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-2xl">Bereit anzufangen?</CardTitle>
               <CardDescription>Starten Sie noch heute mit der digitalen Baustellendokumentation</CardDescription>
