@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId)
       const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
 
       if (error) {
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null
       }
 
+      console.log("Profile fetched:", data)
       return data
     } catch (error) {
       console.error("Unexpected error fetching profile:", error)
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!mounted) return
 
+        console.log("Initial session:", session?.user?.email)
         setUser(session?.user ?? null)
 
         if (session?.user) {
@@ -91,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
 
-      console.log("Auth state changed:", event, session?.user?.id)
+      console.log("Auth state changed:", event, session?.user?.email)
 
       setUser(session?.user ?? null)
 
@@ -155,11 +158,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Verbesserte Admin-Erkennung
+  const isAdmin = profile?.role === "admin" || profile?.position === "Administrator"
+
   const value = {
     user,
     profile,
     loading,
-    isAdmin: profile?.role === "admin",
+    isAdmin,
     signInWithEmail,
     signUpWithEmail,
     signOut,
