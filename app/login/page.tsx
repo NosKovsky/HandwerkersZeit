@@ -15,36 +15,46 @@ import Link from "next/link"
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
-  const { signInWithEmail, user, loadingInitial } = useAuth()
+  const { signInWithEmail, user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loadingInitial && user) {
+    if (!loading && user) {
       router.push("/dashboard")
     }
-  }, [user, loadingInitial, router])
+  }, [user, loading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setIsSubmitting(true)
     setError("")
 
     const { error: signInError } = await signInWithEmail(email, password)
 
     if (signInError) {
       setError(signInError.message)
-    } else {
-      router.push("/dashboard")
+      setIsSubmitting(false)
     }
-    setLoading(false)
+    // Don't set loading to false here - let the auth context handle the redirect
   }
 
-  if (loadingInitial || (!loadingInitial && user)) {
+  if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
+      <div className="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <Briefcase className="h-12 w-12 animate-pulse text-blue-600" />
+      </div>
+    )
+  }
+
+  if (user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600 dark:text-gray-300">Weiterleitung zum Dashboard...</p>
+        </div>
       </div>
     )
   }
@@ -72,7 +82,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
+                disabled={isSubmitting}
                 placeholder="name@beispiel.de"
               />
             </div>
@@ -84,12 +94,12 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loading}
+                disabled={isSubmitting}
                 placeholder="••••••••"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Anmelden
             </Button>
           </form>

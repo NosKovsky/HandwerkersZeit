@@ -20,7 +20,7 @@ import {
   Construction,
   Briefcase,
 } from "lucide-react"
-import { ModeToggle } from "@/components/mode-toggle" // Annahme: Sie haben eine ModeToggle Komponente
+import { ModeToggle } from "@/components/mode-toggle"
 
 interface NavItem {
   href: string
@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
   { href: "/entries", label: "Einträge", icon: ListChecks },
   { href: "/projects", label: "Baustellen", icon: Construction },
   { href: "/materials", label: "Material", icon: Package },
-  { href: "/tasks", label: "Aufgaben", icon: MessageSquare }, // Früher Kommentare
+  { href: "/tasks", label: "Aufgaben", icon: MessageSquare },
   { href: "/gallery", label: "Galerie", icon: ImageIcon },
   { href: "/receipts", label: "Quittungen", icon: Receipt },
   { href: "/calendar", label: "Kalender", icon: CalendarDays },
@@ -42,12 +42,11 @@ const navItems: NavItem[] = [
 ]
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
-  const { user, profile, signOut, isAdmin, loadingInitial } = useAuth()
+  const { user, profile, signOut, isAdmin, loading } = useAuth()
 
   const filteredNavItems = navItems.filter((item) => !item.adminOnly || isAdmin)
 
-  if (loadingInitial && !user) {
-    // Zeige Ladezustand nur wenn nicht eingeloggt und noch lädt
+  if (loading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <Construction className="h-12 w-12 animate-spin text-blue-600" />
@@ -56,8 +55,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    // Wenn nicht eingeloggt, zeige nur den Inhalt (z.B. Login-Seite)
-    // Die Login-Seite sollte kein MainLayout verwenden oder das Layout entsprechend anpassen.
     return <>{children}</>
   }
 
@@ -128,7 +125,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 key={item.label}
                 href={item.href}
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-                title={item.label} // Tooltip für Desktop
+                title={item.label}
               >
                 <item.icon className="h-5 w-5" />
                 <span className="sr-only">{item.label}</span>

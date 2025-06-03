@@ -2,69 +2,54 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createSupabaseClient } from "@/lib/supabase/client"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Briefcase, Clock, FileText, Camera, Receipt, Users, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
-  const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState(null)
+  const { user, loading } = useAuth()
   const router = useRouter()
-  const supabase = createSupabaseClient()
+  const [redirecting, setRedirecting] = useState(false)
 
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-        setUser(user)
-
-        if (user) {
-          router.push("/dashboard")
-        }
-      } catch (error) {
-        console.log("Auth check error:", error)
-      } finally {
-        setLoading(false)
-      }
+    if (!loading && user && !redirecting) {
+      setRedirecting(true)
+      router.push("/dashboard")
     }
-
-    checkUser()
-  }, [router, supabase.auth])
+  }, [user, loading, router, redirecting])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Lade HandwerkersZeit...</p>
+          <p className="text-gray-600 dark:text-gray-300">Lade HandwerkersZeit...</p>
         </div>
       </div>
     )
   }
 
-  if (user) {
+  if (user && redirecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Weiterleitung zum Dashboard...</p>
+          <p className="text-gray-600 dark:text-gray-300">Weiterleitung zum Dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm">
+      <header className="border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Briefcase className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">HandwerkersZeit</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">HandwerkersZeit</span>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" asChild>
@@ -80,11 +65,11 @@ export default function HomePage() {
       {/* Hero Content */}
       <main className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Baustellendokumentation
             <span className="text-blue-600 block">leicht gemacht</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
             Dokumentieren Sie Ihre Arbeitszeit, Materialien und Quittungen digital. Einfach, schnell und immer
             verfügbar.
           </p>
@@ -151,7 +136,7 @@ export default function HomePage() {
 
         {/* CTA Section */}
         <div className="text-center">
-          <Card className="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm">
+          <Card className="max-w-2xl mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-2xl">Bereit anzufangen?</CardTitle>
               <CardDescription>Starten Sie noch heute mit der digitalen Baustellendokumentation</CardDescription>

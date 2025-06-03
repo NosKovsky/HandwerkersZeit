@@ -11,7 +11,7 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 interface AuthContextType {
   user: User | null
   profile: Profile | null
-  loadingInitial: boolean
+  loading: boolean
   isAdmin: boolean
   signInWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signUpWithEmail: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>
@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [loadingInitial, setLoadingInitial] = useState(true)
+  const [loading, setLoading] = useState(true)
   const supabase = createSupabaseBrowserClient()
 
   const fetchProfile = async (userId: string) => {
@@ -51,6 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    let mounted = true
+
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -58,18 +60,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { session },
         } = await supabase.auth.getSession()
 
+        if (!mounted) return
+
         setUser(session?.user ?? null)
 
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id)
-          setProfile(profileData)
+          if (mounted) {
+            setProfile(profileData)
+          }
         }
       } catch (error) {
         console.error("Error getting initial session:", error)
-        setUser(null)
-        setProfile(null)
+        if (mounted) {
+          setUser(null)
+          setProfile(null)
+        }
       } finally {
-        setLoadingInitial(false)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
 
@@ -79,19 +89,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
+
+      console.log("Auth state changed:", event, session?.user?.id)
+
       setUser(session?.user ?? null)
 
       if (session?.user) {
         const profileData = await fetchProfile(session.user.id)
-        setProfile(profileData)
+        if (mounted) {
+          setProfile(profileData)
+        }
       } else {
-        setProfile(null)
+        if (mounted) {
+          setProfile(null)
+        }
       }
 
-      setLoadingInitial(false)
+      if (mounted) {
+        setLoading(false)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [supabase.auth])
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -135,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     profile,
-    loadingInitial,
+    loading,
     isAdmin: profile?.role === "admin",
     signInWithEmail,
     signUpWithEmail,

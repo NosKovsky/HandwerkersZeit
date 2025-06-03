@@ -1,21 +1,21 @@
 "use client"
 
 import Link from "next/link"
-
 import { Button } from "@/components/ui/button"
-
 import { useEffect, useState } from "react"
 import { MainLayout } from "@/components/layout/main-layout"
 import { useAuth } from "@/contexts/auth-context"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Briefcase, Clock, Loader2, BarChart3, Users, FileText } from "lucide-react"
+import { useRouter } from "next/navigation"
 import type { Database } from "@/lib/supabase/database.types"
 
 type Entry = Database["public"]["Tables"]["entries"]["Row"]
 
 export default function DashboardPage() {
-  const { profile, loadingInitial: authLoading, user } = useAuth()
+  const { profile, loading: authLoading, user } = useAuth()
+  const router = useRouter()
   const supabase = createSupabaseBrowserClient()
   const [totalHoursMonth, setTotalHoursMonth] = useState(0)
   const [totalHoursOverall, setTotalHoursOverall] = useState(0)
@@ -26,6 +26,12 @@ export default function DashboardPage() {
     totalProjects: 0,
     totalReceipts: 0,
   })
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, authLoading, router])
 
   useEffect(() => {
     if (user) {
@@ -76,12 +82,16 @@ export default function DashboardPage() {
     }
   }, [user, supabase])
 
-  if (authLoading && !user) {
+  if (authLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <Briefcase className="h-12 w-12 animate-pulse text-blue-600" />
       </div>
     )
+  }
+
+  if (!user) {
+    return null // Will redirect via useEffect
   }
 
   return (
