@@ -21,7 +21,8 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) {
+    // Nur weiterleiten, wenn wir sicher sind, dass der Benutzer eingeloggt ist
+    if (!loading && user && user.id) {
       router.push("/dashboard")
     }
   }, [user, loading, router])

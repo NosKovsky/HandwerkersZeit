@@ -58,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        setLoading(true) // Explizit Loading setzen
         const {
           data: { session },
         } = await supabase.auth.getSession()
@@ -65,13 +66,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return
 
         console.log("Initial session:", session?.user?.email)
-        setUser(session?.user ?? null)
 
         if (session?.user) {
+          setUser(session.user)
           const profileData = await fetchProfile(session.user.id)
           if (mounted) {
             setProfile(profileData)
           }
+        } else {
+          // Explizit null setzen wenn keine Session
+          setUser(null)
+          setProfile(null)
         }
       } catch (error) {
         console.error("Error getting initial session:", error)
@@ -81,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } finally {
         if (mounted) {
-          setLoading(false)
+          setLoading(false) // Wichtig: Loading auf false setzen
         }
       }
     }
@@ -96,21 +101,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log("Auth state changed:", event, session?.user?.email)
 
-      setUser(session?.user ?? null)
+      // Bei Auth-Änderungen explizit Loading setzen
+      setLoading(true)
 
       if (session?.user) {
+        setUser(session.user)
         const profileData = await fetchProfile(session.user.id)
         if (mounted) {
           setProfile(profileData)
         }
       } else {
         if (mounted) {
+          setUser(null)
           setProfile(null)
         }
       }
 
       if (mounted) {
-        setLoading(false)
+        setLoading(false) // Wichtig: Loading auf false setzen
       }
     })
 
@@ -118,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [supabase.auth])
+  }, [])
 
   const signInWithEmail = async (email: string, password: string) => {
     try {

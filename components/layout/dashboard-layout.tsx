@@ -2,9 +2,9 @@
 
 import type React from "react"
 
+import { Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "./sidebar"
-import { Loader2 } from "lucide-react"
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth()
