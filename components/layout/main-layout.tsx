@@ -1,11 +1,12 @@
 "use client"
 
 import type React from "react"
-
+import { ModeToggle } from "./mode-toggle" // Import ModeToggle component
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "./sidebar"
-import { ModeToggle } from "@/components/mode-toggle"
 import { Loader2 } from "lucide-react"
+import { useMobile } from "@/hooks/use-mobile"
+import { cn } from "@/utils/cn" // Import cn utility function
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -13,31 +14,36 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { loading } = useAuth()
+  const isMobile = useMobile()
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600 dark:text-blue-400" />
-          <p className="text-gray-600 dark:text-gray-400">Lade HandwerkersZeit...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Lade HandwerkersZeit...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-background">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <header className="bg-card border-b px-4 py-3 md:px-6 md:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Baustellen Dokumentation</h1>
-            <div className="flex items-center space-x-4">
-              <ModeToggle />
-            </div>
+            <h1 className={cn("font-bold text-foreground", isMobile ? "text-lg ml-12" : "text-2xl")}>
+              Baustellen Dokumentation
+            </h1>
+            {isMobile && (
+              <div className="flex items-center space-x-2">
+                <ModeToggle />
+              </div>
+            )}
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
