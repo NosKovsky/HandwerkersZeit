@@ -7,11 +7,14 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Trash2, Package } from "lucide-react"
+import { Plus, Trash2, Package, AlertTriangle } from "lucide-react"
 import { getMaterials } from "@/app/materials/actions"
 import type { Database } from "@/lib/supabase/database.types"
+import { toast } from "sonner"
 
-type Material = Database["public"]["Tables"]["materials"]["Row"]
+type Material = Database["public"]["Tables"]["materials"]["Row"] & {
+  current_stock?: number
+}
 
 export interface SelectedMaterialItem {
   material_id: string
@@ -56,6 +59,16 @@ export function MaterialSelector({ selectedMaterials, onChange, disabled = false
     // Prüfen ob Material bereits ausgewählt
     const existingIndex = selectedMaterials.findIndex((m) => m.material_id === selectedMaterialId)
 
+    // Prüfen ob genug Bestand vorhanden ist
+    const currentStock = material.current_stock || 0
+    const existingQuantity = existingIndex >= 0 ? selectedMaterials[existingIndex].quantity : 0
+    const totalNeeded = existingQuantity + quantity
+
+    if (totalNeeded > currentStock) {
+      toast.warning(`Nicht genug ${material.name} auf Lager! Verfügbar: ${currentStock} ${material.unit || "Stück"}`)
+      return
+    }
+
     if (existingIndex >= 0) {
       // Menge aktualisieren
       const updated = [...selectedMaterials]
@@ -87,9 +100,35 @@ export function MaterialSelector({ selectedMaterials, onChange, disabled = false
       return
     }
 
+    // Prüfen ob genug Bestand vorhanden ist
+    const material = materials.find((m) => m.id === materialId)
+    if (material && (material.current_stock || 0) < newQuantity) {
+      toast.warning(
+        `Nicht genug ${material.name} auf Lager! Verfügbar: ${material.current_stock} ${material.unit || "Stück"}`,
+      )
+      return
+    }
+
     const updated = selectedMaterials.map((m) => (m.material_id === materialId ? { ...m, quantity: newQuantity } : m))
     onChange(updated)
   }
+
+  // Materialien mit Bestandsanzeige
+  const materialsWithStock = materials.map((material) => {
+    const stock = material.current_stock || 0
+    let stockStatus = "normal"
+
+    if (stock <= 0) {
+      stockStatus = "empty"
+    } else if (stock < 10) {
+      stockStatus = "low"
+    }
+
+    return {
+      ...material,
+      stockStatus,
+    }
+  })
 
   return (
     <Card>
@@ -111,9 +150,22 @@ export function MaterialSelector({ selectedMaterials, onChange, disabled = false
                 <SelectValue placeholder="Material auswählen..." />
               </SelectTrigger>
               <SelectContent>
-                {materials.map((material) => (
-                  <SelectItem key={material.id} value={material.id}>
+                {materialsWithStock.map((material) => (
+                  <SelectItem
+                    key={material.id}
+                    value={material.id}
+                    disabled={material.stockStatus === "empty"}
+                    className={
+                      material.stockStatus === "empty"
+                        ? "text-gray-400"
+                        : material.stockStatus === "low"
+                          ? "text-orange-600"
+                          : ""
+                    }
+                  >
                     {material.name} ({material.unit || "Stück"})
+                    {material.stockStatus === "empty" && " - Nicht verfügbar"}
+                    {material.stockStatus === "low" && ` - Nur noch ${material.current_stock}`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -184,6 +236,12 @@ export function MaterialSelector({ selectedMaterials, onChange, disabled = false
         {selectedMaterials.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">Keine Materialien ausgewählt</p>
         )}
+
+        {/* Hinweis zur Bestandsreduzierung */}
+        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2">
+          <AlertTriangle className="h-3 w-3" />
+          <span>Materialien werden automatisch vom Bestand abgezogen</span>
+        </div>
       </CardContent>
     </Card>
   )

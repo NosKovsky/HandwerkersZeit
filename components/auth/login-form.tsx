@@ -84,9 +84,9 @@ export function LoginForm() {
       </div>
 
       <div className="text-center">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Noch kein Konto?{" "}
-          <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/register" className="font-medium text-orange-500 hover:text-orange-400 bg-transparent">
             Hier registrieren
           </Link>
         </p>

@@ -134,6 +134,7 @@ export function TaskList() {
                     size="icon"
                     className="h-8 w-8 text-destructive hover:bg-destructive/10"
                     onClick={() => handleDelete(task.id)}
+                    aria-label={`Aufgabe "${task.content.substring(0, 20)}..." löschen`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

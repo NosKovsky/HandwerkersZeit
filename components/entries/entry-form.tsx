@@ -15,22 +15,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2, CalendarIcon, ClockIcon, ImagePlus, Trash2, Mic, AlertCircle } from "lucide-react"
 import { createEntry, updateEntry, type Entry } from "@/app/entries/actions"
-import { getProjects } from "@/app/projects/actions"
+import { getBaustellen } from "@/app/baustellen/actions" // Geändert von getProjects
 import { getStorageUrl, STORAGE_BUCKETS } from "@/lib/supabase/storage"
 import type { Database } from "@/lib/supabase/database.types"
 import { MaterialSelector, type SelectedMaterialItem } from "./material-selector"
 import { useAuth } from "@/contexts/auth-context"
 
-type Project = Database["public"]["Tables"]["projects"]["Row"]
+type BaustelleDb = Database["public"]["Tables"]["projects"]["Row"] // Behält den DB-Namen, aber wir nennen es Baustelle
 type EntryImage = Pick<Database["public"]["Tables"]["entry_images"]["Row"], "id" | "image_path" | "file_name">
 
-const entrySchema = z.object({
-  entry_date: z.string().min(1, "Datum ist erforderlich."),
-  entry_time: z.string().min(1, "Uhrzeit ist erforderlich."),
-  project_id: z.string().uuid("Ungültige Projekt ID.").optional().nullable(),
-  activity: z.string().min(3, "Tätigkeit muss mindestens 3 Zeichen haben."),
-  notes: z.string().optional().nullable(),
-})
+const entrySchema = z
+  .object({
+    entry_date: z.string().min(1, "Datum ist erforderlich."),
+    start_time: z.string().min(1, "Startzeit ist erforderlich."), // Geändert von entry_time
+    end_time: z.string().min(1, "Endzeit ist erforderlich."), // NEU
+    project_id: z.string().uuid("Ungültige Baustellen ID.").optional().nullable(), // Text geändert
+    activity: z.string().min(3, "Tätigkeit muss mindestens 3 Zeichen haben."),
+    notes: z.string().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      if (data.start_time && data.end_time) {
+        return data.start_time < data.end_time
+      }
+      return true
+    },
+    {
+      message: "Endzeit muss nach der Startzeit liegen.",
+      path: ["end_time"], // Fehler an das Endzeit-Feld binden
+    },
+  )
 
 type EntryFormData = z.infer<typeof entrySchema>
 
@@ -44,7 +58,7 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
   const { user } = useAuth()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const [projects, setProjects] = useState<Project[]>([])
+  const [baustellen, setBaustellen] = useState<BaustelleDb[]>([]) // Geändert von projects
   const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterialItem[]>([])
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [existingImages, setExistingImages] = useState<EntryImage[]>(entry?.entry_images || [])
@@ -62,7 +76,8 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
     resolver: zodResolver(entrySchema),
     defaultValues: {
       entry_date: entry?.entry_date || new Date().toISOString().split("T")[0],
-      entry_time: entry?.entry_time || new Date().toTimeString().split(" ")[0].substring(0, 5),
+      start_time: entry?.entry_time || "07:00", // Geändert von entry_time, Standard 07:00
+      end_time: entry?.end_time || new Date().toTimeString().split(" ")[0].substring(0, 5), // NEU, Standard aktuelle Zeit
       project_id: entry?.project_id || null,
       activity: entry?.activity || "",
       notes: entry?.notes || "",
@@ -70,27 +85,29 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
   })
 
   useEffect(() => {
-    async function loadProjects() {
+    async function loadBaustellen() {
+      // Geändert von loadProjects
       try {
-        const fetchedProjects = await getProjects()
-        setProjects(fetchedProjects)
+        const fetchedBaustellen = await getBaustellen() // Geändert von getProjects
+        setBaustellen(fetchedBaustellen)
       } catch (error) {
-        console.error("Error loading projects:", error)
+        console.error("Error loading baustellen:", error) // Geändert
         toast({
           title: "Fehler",
-          description: "Projekte konnten nicht geladen werden.",
+          description: "Baustellen konnten nicht geladen werden.", // Geändert
           variant: "destructive",
         })
       }
     }
-    loadProjects()
+    loadBaustellen() // Geändert
   }, [toast])
 
   useEffect(() => {
     if (entry) {
       reset({
         entry_date: entry.entry_date,
-        entry_time: entry.entry_time,
+        start_time: entry.entry_time, // Geändert von entry_time
+        end_time: entry.end_time || new Date().toTimeString().split(" ")[0].substring(0, 5), // NEU
         project_id: entry.project_id || null,
         activity: entry.activity,
         notes: entry.notes || "",
@@ -112,7 +129,8 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
     } else {
       reset({
         entry_date: new Date().toISOString().split("T")[0],
-        entry_time: new Date().toTimeString().split(" ")[0].substring(0, 5),
+        start_time: "07:00", // Geändert von entry_time
+        end_time: new Date().toTimeString().split(" ")[0].substring(0, 5), // NEU
         project_id: null,
         activity: "",
         notes: "",
@@ -181,8 +199,14 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
     try {
       const entryPayload = {
         ...data,
+        entry_time: data.start_time, // Map start_time zu entry_time für das Backend
+        end_time: data.end_time,
         materials_used: JSON.stringify(selectedMaterials),
+        project_id: data.project_id, // Sicherstellen, dass project_id übergeben wird
       }
+      // Entferne start_time aus dem Payload, da es durch entry_time ersetzt wurde
+      // @ts-ignore
+      delete entryPayload.start_time
 
       let result
       if (entry) {
@@ -249,16 +273,31 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
                 </p>
               )}
             </div>
+
             <div className="space-y-1.5">
-              <Label htmlFor="entry_time">Uhrzeit</Label>
+              <Label htmlFor="start_time">Startzeit</Label>
               <div className="relative">
                 <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="entry_time" type="time" {...register("entry_time")} className="pl-10" disabled={isLoading} />
+                <Input id="start_time" type="time" {...register("start_time")} className="pl-10" disabled={isLoading} />
               </div>
-              {errors.entry_time && (
+              {errors.start_time && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
-                  {errors.entry_time.message}
+                  {errors.start_time.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="end_time">Endzeit</Label>
+              <div className="relative">
+                <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="end_time" type="time" {...register("end_time")} className="pl-10" disabled={isLoading} />
+              </div>
+              {errors.end_time && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.end_time.message}
                 </p>
               )}
             </div>
@@ -280,9 +319,9 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Keine Baustelle</SelectItem>
-                    {projects.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
+                    {baustellen.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

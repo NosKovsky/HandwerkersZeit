@@ -16,8 +16,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/use-toast"
-import { updateUserRole } from "./actions"
-import { Check, X, UserCog, Users, Shield, ShieldAlert } from "lucide-react"
+import { updateUserRole, getAllUsers, getUserGroups } from "./actions"
+import { Check, X, UserCog, Users, Shield, ShieldAlert, Edit } from "lucide-react"
+import { UserEditDialog } from "./user-edit-dialog"
+import { GroupManagement } from "./group-management"
 
 type User = {
   id: string
@@ -27,12 +29,20 @@ type User = {
   created_at: string
 }
 
+type UserGroup = {
+  id: string
+  name: string
+}
+
 export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
   const [users, setUsers] = useState<User[]>(initialUsers)
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [newRole, setNewRole] = useState<"admin" | "user">("user")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [groups, setGroups] = useState<UserGroup[]>([])
+  const [showGroupManagement, setShowGroupManagement] = useState(false)
 
   const handleRoleChange = async (user: User, role: "admin" | "user") => {
     setSelectedUser(user)
@@ -77,6 +87,25 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
       hour: "2-digit",
       minute: "2-digit",
     })
+  }
+
+  const loadData = async () => {
+    try {
+      const [usersResult, groupsResult] = await Promise.all([getAllUsers(), getUserGroups()])
+
+      if (usersResult.users) {
+        setUsers(usersResult.users)
+      }
+      if (groupsResult.groups) {
+        setGroups(groupsResult.groups)
+      }
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Daten konnten nicht geladen werden.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -155,6 +184,17 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
                           Zum Admin
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setIsEditDialogOpen(true)
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Bearbeiten
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -218,6 +258,15 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <UserEditDialog
+        user={selectedUser}
+        groups={groups}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onUserUpdated={loadData}
+      />
+
+      {showGroupManagement && <GroupManagement />}
     </>
   )
 }

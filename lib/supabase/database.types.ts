@@ -9,7 +9,7 @@ export interface Database {
           email: string
           full_name: string | null
           role: "admin" | "user"
-          position: string | null // Neue Spalte für die Position
+          position: string | null
           created_at: string
           updated_at: string
         }
@@ -18,7 +18,7 @@ export interface Database {
           email: string
           full_name?: string | null
           role?: "admin" | "user"
-          position?: string | null // Neue Spalte für die Position
+          position?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -27,7 +27,7 @@ export interface Database {
           email?: string
           full_name?: string | null
           role?: "admin" | "user"
-          position?: string | null // Neue Spalte für die Position
+          position?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -40,6 +40,45 @@ export interface Database {
           },
         ]
       }
+      customers: {
+        Row: {
+          id: string
+          name: string
+          contact_person: string | null
+          street: string | null
+          zip_code: string | null
+          city: string | null
+          phone: string | null
+          email: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          contact_person?: string | null
+          street?: string | null
+          zip_code?: string | null
+          city?: string | null
+          phone?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          contact_person?: string | null
+          street?: string | null
+          zip_code?: string | null
+          city?: string | null
+          phone?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           id: string
@@ -47,6 +86,8 @@ export interface Database {
           address: string | null
           description: string | null
           created_by: string | null
+          status: "Aktiv" | "In Arbeit" | "Abgeschlossen" | null
+          customer_id: string | null // NEU
           created_at: string
           updated_at: string
         }
@@ -56,6 +97,8 @@ export interface Database {
           address?: string | null
           description?: string | null
           created_by?: string | null
+          status?: "Aktiv" | "In Arbeit" | "Abgeschlossen" | null
+          customer_id?: string | null // NEU
           created_at?: string
           updated_at?: string
         }
@@ -65,12 +108,66 @@ export interface Database {
           address?: string | null
           description?: string | null
           created_by?: string | null
+          status?: "Aktiv" | "In Arbeit" | "Abgeschlossen" | null
+          customer_id?: string | null // NEU
           created_at?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "projects_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_customer_id_fkey"
+            columns: ["customer_id"]
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_todos: {
+        Row: {
+          id: string
+          project_id: string
+          content: string
+          is_completed: boolean
+          created_by: string | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          content: string
+          is_completed?: boolean
+          created_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          content?: string
+          is_completed?: boolean
+          created_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_todos_project_id_fkey"
+            columns: ["project_id"]
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_todos_created_by_fkey"
             columns: ["created_by"]
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -119,10 +216,11 @@ export interface Database {
           id: string
           user_id: string
           project_id: string | null
-          entry_date: string // date
-          entry_time: string // time
+          entry_date: string
+          entry_time: string
+          end_time: string | null
           activity: string
-          materials_used: Json | null // [{ material_id: UUID, quantity: number, name: string, unit: string }]
+          materials_used: Json | null
           notes: string | null
           created_at: string
           updated_at: string
@@ -133,6 +231,7 @@ export interface Database {
           project_id?: string | null
           entry_date: string
           entry_time: string
+          end_time?: string | null
           activity: string
           materials_used?: Json | null
           notes?: string | null
@@ -145,6 +244,7 @@ export interface Database {
           project_id?: string | null
           entry_date?: string
           entry_time?: string
+          end_time?: string | null
           activity?: string
           materials_used?: Json | null
           notes?: string | null
@@ -279,8 +379,8 @@ export interface Database {
           user_id: string
           project_id: string | null
           company_name: string | null
-          amount: number // decimal
-          receipt_date: string // date
+          amount: number
+          receipt_date: string
           category: string | null
           description: string | null
           image_path: string | null

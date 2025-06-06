@@ -1,162 +1,94 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
-import { useAuth } from "@/contexts/auth-context"
-import { supabase } from "@/lib/supabase"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
+import { SimpleVoiceNotes } from "@/components/zeiterfassung/simple-voice-notes"
 
-type Project = {
-  id: string
-  name: string
+interface TimeEntryFormProps {
+  onSubmit: (data: any) => void
+  initialData?: any
 }
 
-export function TimeEntryForm() {
-  const { user } = useAuth()
-  const [projects, setProjects] = useState<Project[]>([])
-  const [selectedProject, setSelectedProject] = useState("")
-  const [hours, setHours] = useState("")
-  const [description, setDescription] = useState("")
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0])
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState("")
+export function TimeEntryForm({ onSubmit, initialData }: TimeEntryFormProps) {
+  const [startTime, setStartTime] = useState(initialData?.startTime || "")
+  const [endTime, setEndTime] = useState(initialData?.endTime || "")
+  const [task, setTask] = useState(initialData?.task || "")
+  const [notes, setNotes] = useState(initialData?.notes || "")
+  const [materialsUsed, setMaterialsUsed] = useState<any[]>(initialData?.materialsUsed || [])
 
-  useEffect(() => {
-    fetchProjects()
-  }, [])
-
-  const fetchProjects = async () => {
-    try {
-      const { data, error } = await supabase.from("projects").select("id, name").eq("status", "active").order("name")
-
-      if (error) throw error
-      setProjects(data || [])
-    } catch (error) {
-      console.error("Error fetching projects:", error)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
-
-    setLoading(true)
-    setError("")
-    setSuccess(false)
-
-    try {
-      const { error } = await supabase.from("time_entries").insert({
-        project_id: selectedProject,
-        user_id: user.id,
-        description,
-        hours: Number.parseFloat(hours),
-        date,
-      })
-
-      if (error) throw error
-
-      setSuccess(true)
-      setSelectedProject("")
-      setHours("")
-      setDescription("")
-      setDate(new Date().toISOString().split("T")[0])
-    } catch (error: any) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
+    onSubmit({
+      startTime,
+      endTime,
+      task,
+      notes,
+      materialsUsed,
+    })
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card>
       <CardHeader>
-        <CardTitle>Arbeitszeit erfassen</CardTitle>
+        <CardTitle>Zeiteintrag erfassen</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {success && (
-            <Alert>
-              <AlertDescription>Arbeitszeit wurde erfolgreich erfasst!</AlertDescription>
-            </Alert>
-          )}
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="project">Projekt</Label>
-            <Select value={selectedProject} onValueChange={setSelectedProject} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Projekt auswählen" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="startTime">Startzeit</Label>
+              <Input
+                type="time"
+                id="startTime"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="endTime">Endzeit</Label>
+              <Input type="time" id="endTime" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="date">Datum</Label>
+          <div>
+            <Label htmlFor="task">Aufgabe</Label>
             <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              type="text"
+              id="task"
+              value={task}
+              onChange={(e) => setTask(e.target.value)}
+              placeholder="Beschreibung der Tätigkeit"
               required
-              disabled={loading}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="hours">Stunden</Label>
-            <Input
-              id="hours"
-              type="number"
-              step="0.25"
-              min="0"
-              max="24"
-              value={hours}
-              onChange={(e) => setHours(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="z.B. 8.5"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Beschreibung (optional)</Label>
+          <div>
+            <Label htmlFor="notes">Notizen</Label>
             <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={loading}
-              placeholder="Was haben Sie gearbeitet?"
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Zusätzliche Notizen..."
               rows={3}
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading || !selectedProject}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Zeit erfassen
+          {/* Voice Notes für Zeiterfassung */}
+          <SimpleVoiceNotes onNotesUpdate={(newNotes) => setNotes(newNotes)} currentNotes={notes} />
+
+          <Button type="submit" className="w-full">
+            Eintrag speichern
           </Button>
         </form>
       </CardContent>
     </Card>
   )
 }
+
+export default TimeEntryForm
