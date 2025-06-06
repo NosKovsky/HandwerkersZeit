@@ -1,83 +1,32 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { Loader } from "@googlemaps/js-api-loader"
-import * as google from "google.maps"
-
 interface GoogleMapsServerProps {
   address?: string
   className?: string
 }
 
 export function GoogleMapsServer({ address, className = "w-full h-64" }: GoogleMapsServerProps) {
-  const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null)
-
-  useEffect(() => {
-    // Load the Google Maps API
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-
-    if (!apiKey) {
-      console.error("Google Maps API key is missing")
-      return
-    }
-
-    const loader = new Loader({
-      apiKey,
-      version: "weekly",
-      libraries: ["places"],
-    })
-
-    let mapInstance: google.maps.Map | null = null
-    let geocoderInstance: google.maps.Geocoder | null = null
-
-    loader.load().then(() => {
-      const mapElement = document.getElementById("map")
-      if (mapElement) {
-        mapInstance = new google.maps.Map(mapElement, {
-          center: { lat: 51.1657, lng: 10.4515 }, // Default to Germany
-          zoom: 6,
-        })
-        setMap(mapInstance)
-
-        geocoderInstance = new google.maps.Geocoder()
-        setGeocoder(geocoderInstance)
-
-        // If address is provided, geocode it
-        if (address) {
-          geocodeAddress(address, geocoderInstance, mapInstance)
-        }
-      }
-    })
-
-    return () => {
-      // Cleanup
-      setMap(null)
-      setGeocoder(null)
-    }
-  }, [])
-
-  // Update map when address changes
-  useEffect(() => {
-    if (geocoder && map && address) {
-      geocodeAddress(address, geocoder, map)
-    }
-  }, [address, geocoder, map])
-
-  const geocodeAddress = (address: string, geocoder: google.maps.Geocoder, map: google.maps.Map) => {
-    geocoder.geocode({ address }, (results, status) => {
-      if (status === "OK" && results && results[0]) {
-        map.setCenter(results[0].geometry.location)
-        map.setZoom(15)
-        new google.maps.Marker({
-          map,
-          position: results[0].geometry.location,
-        })
-      } else {
-        console.error(`Geocode was not successful for the following reason: ${status}`)
-      }
-    })
+  if (!address) {
+    return (
+      <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-lg`}>
+        <p className="text-gray-500">Keine Adresse verfügbar</p>
+      </div>
+    )
   }
 
-  return <div id="map" className={className}></div>
+  // Simple fallback without API - just show the address
+  return (
+    <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-lg p-4`}>
+      <div className="text-center">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Adresse:</p>
+        <p className="font-medium">{address}</p>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
+        >
+          In Google Maps öffnen
+        </a>
+      </div>
+    </div>
+  )
 }
