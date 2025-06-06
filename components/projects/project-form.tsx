@@ -9,9 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast" // Annahme: Sie haben useToast von shadcn/ui
+import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
-import { createProject, updateProject } from "@/lib/client-actions" // Updated import
 import type { Database } from "@/lib/supabase/database.types"
 
 type Project = Database["public"]["Tables"]["projects"]["Row"]
@@ -26,10 +25,11 @@ type ProjectFormData = z.infer<typeof projectSchema>
 
 interface ProjectFormProps {
   project?: Project | null
-  onSuccess?: () => void // Callback nach Erfolg, z.B. um Modal zu schließen
+  onSuccess?: () => void
+  onSubmit?: (data: ProjectFormData, isUpdate?: boolean) => Promise<any>
 }
 
-export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
+export function ProjectForm({ project, onSuccess, onSubmit }: ProjectFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
@@ -60,17 +60,12 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
     }
   }, [project, reset])
 
-  const onSubmit: SubmitHandler<ProjectFormData> = async (data) => {
+  const handleFormSubmit: SubmitHandler<ProjectFormData> = async (data) => {
+    if (!onSubmit) return
+
     setIsLoading(true)
     try {
-      let result
-      if (project) {
-        // Update
-        result = await updateProject(project.id, data)
-      } else {
-        // Create
-        result = await createProject(data)
-      }
+      const result = await onSubmit(data, !!project)
 
       if (result.success) {
         toast({
@@ -78,7 +73,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
           description: `Projekt wurde ${project ? "aktualisiert" : "erstellt"}.`,
         })
         reset()
-        router.refresh() // Aktualisiert die Daten auf der Client-Seite durch Neuladen der Server Components
+        router.refresh()
         if (onSuccess) onSuccess()
       } else {
         toast({
@@ -107,7 +102,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
           {project ? "Aktualisieren Sie die Details dieser Baustelle." : "Fügen Sie eine neue Baustelle hinzu."}
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(handleFormSubmit)}>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="name">Name der Baustelle</Label>

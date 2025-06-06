@@ -33,7 +33,6 @@ import { format } from "date-fns"
 import { de } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
-import { updateUserProfile } from "@/lib/client-actions" // Updated import
 import type { Database } from "@/lib/database.types"
 
 type UserProfile = Database["public"]["Tables"]["profiles"]["Row"] & {
@@ -52,9 +51,10 @@ interface UserEditDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUserUpdated: () => void
+  onSubmit?: (userId: string, data: any) => Promise<any>
 }
 
-export function UserEditDialog({ user, groups, open, onOpenChange, onUserUpdated }: UserEditDialogProps) {
+export function UserEditDialog({ user, groups, open, onOpenChange, onUserUpdated, onSubmit }: UserEditDialogProps) {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -92,11 +92,11 @@ export function UserEditDialog({ user, groups, open, onOpenChange, onUserUpdated
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
+    if (!user || !onSubmit) return
 
     setIsSubmitting(true)
     try {
-      const result = await updateUserProfile(user.id, {
+      const result = await onSubmit(user.id, {
         full_name: formData.full_name || null,
         phone: formData.phone || null,
         address: formData.address || null,

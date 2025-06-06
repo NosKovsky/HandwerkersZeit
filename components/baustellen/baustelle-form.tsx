@@ -4,7 +4,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
-import { createBaustelle, updateBaustelle } from "@/lib/client-actions" // Updated import
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CalendarIcon } from "@radix-ui/react-icons"
 import { format } from "date-fns"
@@ -19,7 +18,6 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { CustomerSelector } from "@/components/customers/customer-selector"
 import type { Customer } from "@/app/customers/actions"
-import { GoogleMaps } from "@/components/maps/google-maps"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -45,10 +43,10 @@ interface BaustelleFormProps {
     customer_id?: string | null
   }
   onSuccess?: () => void
-  googleMapsApiKey?: string
+  onSubmit?: (data: any) => Promise<any>
 }
 
-export function BaustelleForm({ baustelle, onSuccess, googleMapsApiKey }: BaustelleFormProps) {
+export function BaustelleForm({ baustelle, onSuccess, onSubmit }: BaustelleFormProps) {
   const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,13 +70,13 @@ export function BaustelleForm({ baustelle, onSuccess, googleMapsApiKey }: Bauste
 
   useEffect(() => {
     if (baustelle?.customer_id) {
-      // In a real app, you'd fetch the customer details here
-      // For now, we just set the ID for the form
       form.setValue("customer_id", baustelle.customer_id)
     }
   }, [baustelle, form])
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function handleSubmit(values: z.infer<typeof formSchema>) {
+    if (!onSubmit) return
+
     const formData = {
       ...values,
       start_date: date?.from,
@@ -86,7 +84,7 @@ export function BaustelleForm({ baustelle, onSuccess, googleMapsApiKey }: Bauste
       customer_id: selectedCustomer?.id || values.customer_id,
     }
 
-    const result = baustelle ? await updateBaustelle(baustelle.id, formData) : await createBaustelle(formData)
+    const result = await onSubmit(formData)
 
     if (result?.error) {
       toast.error(result.error)
@@ -99,7 +97,7 @@ export function BaustelleForm({ baustelle, onSuccess, googleMapsApiKey }: Bauste
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -135,7 +133,6 @@ export function BaustelleForm({ baustelle, onSuccess, googleMapsApiKey }: Bauste
             </FormItem>
           )}
         />
-        {googleMapsApiKey && <GoogleMaps address={form.watch("address")} apiKey={googleMapsApiKey} />}
         <FormField
           control={form.control}
           name="description"
