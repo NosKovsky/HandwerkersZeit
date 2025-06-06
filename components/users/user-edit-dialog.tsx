@@ -33,7 +33,7 @@ import { format } from "date-fns"
 import { de } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
-import { updateUserProfile } from "./actions"
+import { updateUserProfile } from "@/lib/client-actions" // Updated import
 import type { Database } from "@/lib/database.types"
 
 type UserProfile = Database["public"]["Tables"]["profiles"]["Row"] & {

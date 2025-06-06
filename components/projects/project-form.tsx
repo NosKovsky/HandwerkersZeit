@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast" // Annahme: Sie haben useToast von shadcn/ui
 import { Loader2 } from "lucide-react"
-import { createProject, updateProject } from "@/app/projects/actions" // Server Actions
+import { createProject, updateProject } from "@/lib/client-actions" // Updated import
 import type { Database } from "@/lib/supabase/database.types"
 
 type Project = Database["public"]["Tables"]["projects"]["Row"]

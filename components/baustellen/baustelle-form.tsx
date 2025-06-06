@@ -4,7 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
-import { createBaustelle, updateBaustelle } from "@/app/baustellen/actions"
+import { createBaustelle, updateBaustelle } from "@/lib/client-actions" // Updated import
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CalendarIcon } from "@radix-ui/react-icons"
 import { format } from "date-fns"
