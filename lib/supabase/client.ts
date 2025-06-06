@@ -13,5 +13,10 @@ export function createSupabaseClient() {
   return createSupabaseBrowserClient()
 }
 
+// Server action client - simplified version for client-side compatibility
+export function createSupabaseServerActionClient() {
+  return createSupabaseBrowserClient()
+}
+
 // Default export
 export default createSupabaseClient

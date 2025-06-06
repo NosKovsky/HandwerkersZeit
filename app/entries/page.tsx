@@ -1,19 +1,29 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { createSupabaseClient } from "@/lib/supabase/client" // Client-seitiger Supabase Client
-import { getEntries, deleteEntry as deleteEntryAction, type Entry, type PaginatedEntriesResponse } from "./actions"
+import { createSupabaseClient, createSupabaseServerActionClient } from "@/lib/supabase/client" // Client-seitiger Supabase Client
+import { getEntries, createEntry, updateEntry, deleteEntry, type Entry, type PaginatedEntriesResponse } from "./actions"
 import { EntryList } from "@/components/entries/entry-list"
 import { EntryForm } from "@/components/entries/entry-form"
 import { Button } from "@/components/ui/button"
 import { PlusCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { redirect } from "next/navigation"
 
 const PAGE_SIZE = 10
 
-export default function EntriesPage() {
-  const supabase = createSupabaseClient()
+export default async function EntriesPage() {
+  const supabaseServer = await createSupabaseServerActionClient()
+  const {
+    data: { user },
+  } = await supabaseServer.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  const supabaseClient = createSupabaseClient()
   const [entriesResponse, setEntriesResponse] = useState<PaginatedEntriesResponse>({ entries: [], count: 0 })
   const [isLoading, setIsLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -25,27 +35,7 @@ export default function EntriesPage() {
     async (page: number) => {
       setIsLoading(true)
       try {
-        // Hier wird angenommen, dass getEntries direkt aufgerufen werden kann
-        // oder du erstellst eine serverseitige Route, die getEntries aufruft.
-        // Für dieses Beispiel rufen wir es direkt auf, was im Client nicht ideal ist,
-        // aber die Logik der Paginierung zeigt.
-        // Besser: Eine Server Action, die Paginierungsparameter akzeptiert.
-        // Da getEntries bereits in actions.ts ist, müssen wir es so anpassen, dass es
-        // vom Client aufgerufen werden kann oder eine neue Action erstellen.
-        // Für dieses Beispiel gehe ich davon aus, dass getEntries so angepasst wurde,
-        // dass es ohne expliziten Supabase-Client-Parameter von einer Server-Komponente/Route
-        // oder einer neuen Client-aufrufbaren Action genutzt wird.
-        // Da wir hier in einer Client-Komponente sind und getEntries eine SupabaseClient-Instanz erwartet,
-        // müssen wir eine Wrapper-Action erstellen oder getEntries anpassen.
-
-        // Annahme: Es gibt eine Server Action, die getEntries mit Paginierung aufruft.
-        // Nennen wir sie fetchPaginatedEntries in actions.ts
-        // const data = await fetchPaginatedEntries(page, PAGE_SIZE); // Diese Action müsste erstellt werden
-
-        // Temporäre direkte Nutzung (nicht empfohlen für Produktion ohne Server Action Wrapper)
-        // Dies erfordert, dass getEntries in actions.ts so exportiert wird, dass es clientseitig
-        // importiert werden kann und den Supabase Client als Argument akzeptiert.
-        const data = await getEntries(supabase, page, PAGE_SIZE, {}) // Leere Filter für dieses Beispiel
+        const data = await getEntries(supabaseClient, user.id, page, PAGE_SIZE, {}) // Leere Filter für dieses Beispiel
         setEntriesResponse(data)
       } catch (error) {
         console.error("Error fetching entries:", error)
@@ -54,7 +44,7 @@ export default function EntriesPage() {
         setIsLoading(false)
       }
     },
-    [supabase, toast],
+    [supabaseClient, user.id, toast],
   )
 
   useEffect(() => {
@@ -64,7 +54,6 @@ export default function EntriesPage() {
   const handleFormSuccess = () => {
     setIsFormOpen(false)
     setSelectedEntry(null)
-    // Lade die aktuelle Seite neu, um Änderungen zu sehen, oder idealerweise nur die erste Seite, wenn ein neuer Eintrag oben erscheint
     fetchEntries(currentPage)
   }
 
@@ -83,9 +72,8 @@ export default function EntriesPage() {
     if (!confirmed) return
 
     try {
-      await deleteEntryAction(id) // Annahme: deleteEntryAction ist eine Server Action
+      await deleteEntry(id) // Annahme: deleteEntry ist eine Server Action
       toast({ title: "Erfolg", description: "Eintrag gelöscht." })
-      // Einträge neu laden, ggf. die aktuelle Seite oder die erste Seite
       fetchEntries(currentPage)
     } catch (error) {
       toast({ title: "Fehler", description: "Eintrag konnte nicht gelöscht werden.", variant: "destructive" })
@@ -97,7 +85,7 @@ export default function EntriesPage() {
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h1 className="text-2xl font-semibold">Arbeitseinträge</h1>
+        <h1 className="text-2xl font-semibold">Zeiterfassung</h1>
         <Button onClick={openNewForm}>
           <PlusCircle className="mr-2 h-5 w-5" />
           Neuer Eintrag
@@ -142,7 +130,12 @@ export default function EntriesPage() {
           <DialogHeader>
             <DialogTitle>{selectedEntry ? "Eintrag Bearbeiten" : "Neuer Eintrag Erstellen"}</DialogTitle>
           </DialogHeader>
-          <EntryForm entry={selectedEntry} onSuccess={handleFormSuccess} />
+          <EntryForm
+            entry={selectedEntry}
+            onSuccess={handleFormSuccess}
+            onSubmit={selectedEntry ? updateEntry : createEntry}
+            userId={user.id}
+          />
         </DialogContent>
       </Dialog>
     </div>

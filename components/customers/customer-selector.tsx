@@ -1,183 +1,152 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, Plus, User } from "lucide-react"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Check, ChevronsUpDown, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { searchCustomers, type Customer } from "@/app/customers/actions"
-import { CustomerForm } from "./customer-form"
 
-interface CustomerSelectorProps {
-  selectedCustomer?: Customer | null
-  onCustomerSelect: (customer: Customer | null) => void
-  onCustomerDataChange?: (customerData: Partial<Customer>) => void
+interface Customer {
+  id: string
+  name: string
+  contact_person: string | null
+  city: string | null
 }
 
-export function CustomerSelector({ selectedCustomer, onCustomerSelect, onCustomerDataChange }: CustomerSelectorProps) {
+interface CustomerSelectorProps {
+  customers: Customer[]
+  selectedCustomerId?: string | null
+  onCustomerSelect: (customerId: string | null) => void
+  onSearchCustomers?: (query: string) => Promise<Customer[]>
+  onCreateCustomer?: (customerData: any) => Promise<{ success: boolean; customer?: Customer }>
+}
+
+export function CustomerSelector({
+  customers,
+  selectedCustomerId,
+  onCustomerSelect,
+  onSearchCustomers,
+  onCreateCustomer,
+}: CustomerSelectorProps) {
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [showNewCustomerDialog, setShowNewCustomerDialog] = useState(false)
-  const searchTimeoutRef = useRef<NodeJS.Timeout>()
+  const [searchResults, setSearchResults] = useState<Customer[]>(customers)
+  const [isCreating, setIsCreating] = useState(false)
+  const [newCustomerName, setNewCustomerName] = useState("")
+
+  const selectedCustomer = customers.find((customer) => customer.id === selectedCustomerId)
 
   useEffect(() => {
-    if (searchQuery.length >= 2) {
-      // Debounce search
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-
-      searchTimeoutRef.current = setTimeout(async () => {
-        setIsLoading(true)
-        try {
-          const results = await searchCustomers(searchQuery)
-          setCustomers(results)
-        } catch (error) {
-          console.error("Error searching customers:", error)
-        } finally {
-          setIsLoading(false)
-        }
-      }, 300)
+    if (searchQuery.length >= 2 && onSearchCustomers) {
+      onSearchCustomers(searchQuery).then(setSearchResults)
     } else {
-      setCustomers([])
+      setSearchResults(customers)
     }
+  }, [searchQuery, customers, onSearchCustomers])
 
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchQuery])
+  const handleCreateCustomer = async () => {
+    if (!newCustomerName.trim() || !onCreateCustomer) return
 
-  const handleCustomerSelect = (customer: Customer) => {
-    onCustomerSelect(customer)
-    setOpen(false)
-    setSearchQuery("")
+    const result = await onCreateCustomer({
+      name: newCustomerName.trim(),
+      contact_person: null,
+      street: null,
+      zip_code: null,
+      city: null,
+      phone: null,
+      email: null,
+    })
 
-    // Automatisch Adressdaten übernehmen, falls gewünscht
-    if (onCustomerDataChange && customer.street && customer.city) {
-      const address = `${customer.street}, ${customer.zip_code || ""} ${customer.city}`.trim()
-      onCustomerDataChange({
-        address: address.replace(/^,\s*/, "").replace(/,\s*$/, ""), // Kommas am Anfang/Ende entfernen
-      })
+    if (result.success && result.customer) {
+      onCustomerSelect(result.customer.id)
+      setNewCustomerName("")
+      setIsCreating(false)
+      setOpen(false)
     }
   }
-
-  const handleNewCustomerCreated = (customer: Customer) => {
-    setShowNewCustomerDialog(false)
-    handleCustomerSelect(customer)
-  }
-
-  const displayValue = selectedCustomer
-    ? `${selectedCustomer.name}${selectedCustomer.city ? ` (${selectedCustomer.city})` : ""}`
-    : "Kunde auswählen..."
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="customer-selector">Kunde (optional)</Label>
-      <div className="flex gap-2">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" role="combobox" aria-expanded={open} className="flex-1 justify-between">
-              <span className="truncate">{displayValue}</span>
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0">
-            <Command>
-              <CommandInput
-                placeholder="Kunde suchen (Name, Straße, Ort)..."
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-              />
-              <CommandList>
-                <CommandEmpty>
-                  {searchQuery.length < 2
-                    ? "Mindestens 2 Zeichen eingeben..."
-                    : isLoading
-                      ? "Suche läuft..."
-                      : "Kein Kunde gefunden."}
-                </CommandEmpty>
-                {customers.length > 0 && (
-                  <CommandGroup>
-                    {customers.map((customer) => (
-                      <CommandItem
-                        key={customer.id}
-                        value={customer.id}
-                        onSelect={() => handleCustomerSelect(customer)}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center">
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedCustomer?.id === customer.id ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-                          <div>
-                            <div className="font-medium">{customer.name}</div>
-                            {(customer.street || customer.city) && (
-                              <div className="text-sm text-muted-foreground">
-                                {customer.street && `${customer.street}, `}
-                                {customer.zip_code && `${customer.zip_code} `}
-                                {customer.city}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-
-        <Dialog open={showNewCustomerDialog} onOpenChange={setShowNewCustomerDialog}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Neuen Kunden anlegen</DialogTitle>
-              <DialogDescription>
-                Erstellen Sie einen neuen Kunden, der dann automatisch ausgewählt wird.
-              </DialogDescription>
-            </DialogHeader>
-            <CustomerForm onCustomerCreated={handleNewCustomerCreated} />
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {selectedCustomer && (
-        <div className="flex items-center justify-between p-2 bg-muted rounded-md">
-          <div className="flex items-center text-sm">
-            <User className="mr-2 h-4 w-4" />
-            <span className="font-medium">{selectedCustomer.name}</span>
-            {selectedCustomer.contact_person && (
-              <span className="ml-2 text-muted-foreground">({selectedCustomer.contact_person})</span>
-            )}
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => onCustomerSelect(null)}>
-            Entfernen
+      <Label>Kunde</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
+            {selectedCustomer ? selectedCustomer.name : "Kunde auswählen..."}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
-        </div>
-      )}
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command>
+            <CommandInput placeholder="Kunde suchen..." value={searchQuery} onValueChange={setSearchQuery} />
+            <CommandList>
+              <CommandEmpty>
+                <div className="p-4 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Kein Kunde gefunden</p>
+                  {onCreateCustomer && (
+                    <Button variant="outline" size="sm" onClick={() => setIsCreating(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Neuen Kunden erstellen
+                    </Button>
+                  )}
+                </div>
+              </CommandEmpty>
+              <CommandGroup>
+                {searchResults.map((customer) => (
+                  <CommandItem
+                    key={customer.id}
+                    value={customer.id}
+                    onSelect={() => {
+                      onCustomerSelect(customer.id === selectedCustomerId ? null : customer.id)
+                      setOpen(false)
+                    }}
+                  >
+                    <Check
+                      className={cn("mr-2 h-4 w-4", selectedCustomerId === customer.id ? "opacity-100" : "opacity-0")}
+                    />
+                    <div>
+                      <div className="font-medium">{customer.name}</div>
+                      {customer.contact_person && (
+                        <div className="text-sm text-muted-foreground">{customer.contact_person}</div>
+                      )}
+                      {customer.city && <div className="text-sm text-muted-foreground">{customer.city}</div>}
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+
+          {isCreating && onCreateCustomer && (
+            <div className="border-t p-4 space-y-2">
+              <Label htmlFor="new-customer-name">Neuer Kunde</Label>
+              <Input
+                id="new-customer-name"
+                placeholder="Kundenname"
+                value={newCustomerName}
+                onChange={(e) => setNewCustomerName(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleCreateCustomer}>
+                  Erstellen
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setIsCreating(false)
+                    setNewCustomerName("")
+                  }}
+                >
+                  Abbrechen
+                </Button>
+              </div>
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }
