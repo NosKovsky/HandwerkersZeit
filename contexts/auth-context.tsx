@@ -21,15 +21,24 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Singleton Supabase client
+let supabaseInstance: ReturnType<typeof createSupabaseBrowserClient> | null = null
+
+function getSupabaseClient() {
+  if (!supabaseInstance) {
+    supabaseInstance = createSupabaseBrowserClient()
+  }
+  return supabaseInstance
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createSupabaseBrowserClient()
+  const supabase = getSupabaseClient()
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log("Fetching profile for user:", userId)
       const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
 
       if (error) {
@@ -37,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null
       }
 
-      console.log("Profile fetched:", data)
       return data
     } catch (error) {
       console.error("Unexpected error fetching profile:", error)
@@ -54,13 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true
-    let timeoutId: NodeJS.Timeout
 
     const initializeAuth = async () => {
       try {
-        // Kurzes Timeout um Race Conditions zu vermeiden
-        await new Promise((resolve) => setTimeout(resolve, 100))
-
         const {
           data: { session },
         } = await supabase.auth.getSession()
@@ -69,10 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user) {
           setUser(session.user)
-          // Profile laden ohne await - läuft parallel
-          fetchProfile(session.user.id).then((profileData) => {
-            if (mounted) setProfile(profileData)
-          })
+          const profileData = await fetchProfile(session.user.id)
+          if (mounted) setProfile(profileData)
         } else {
           setUser(null)
           setProfile(null)
@@ -84,26 +86,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null)
         }
       } finally {
-        // Loading IMMER nach 500ms beenden - egal was passiert
-        timeoutId = setTimeout(() => {
-          if (mounted) setLoading(false)
-        }, 500)
+        if (mounted) setLoading(false)
       }
     }
 
     initializeAuth()
 
-    // Auth listener - EINFACH gehalten
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
 
       if (session?.user) {
         setUser(session.user)
-        fetchProfile(session.user.id).then((profileData) => {
-          if (mounted) setProfile(profileData)
-        })
+        const profileData = await fetchProfile(session.user.id)
+        if (mounted) setProfile(profileData)
       } else {
         setUser(null)
         setProfile(null)
@@ -112,14 +109,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false
-      if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
   }, [])
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -131,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = async (email: string, password: string, fullName: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -149,13 +145,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       await supabase.auth.signOut()
+      setUser(null)
       setProfile(null)
     } catch (error) {
       console.error("Error signing out:", error)
     }
   }
 
-  // Verbesserte Admin-Erkennung
   const isAdmin = profile?.role === "admin" || profile?.position === "Administrator"
 
   const value = {
