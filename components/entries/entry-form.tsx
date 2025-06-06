@@ -13,23 +13,21 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2, CalendarIcon, ClockIcon, ImagePlus, Trash2, Mic, AlertCircle } from "lucide-react"
-import { createEntry, updateEntry, type Entry } from "@/app/entries/actions"
-import { getBaustellen } from "@/app/baustellen/actions" // Geändert von getProjects
+import { Loader2, CalendarIcon, ClockIcon, ImagePlus, Trash2, AlertCircle } from "lucide-react"
 import { getStorageUrl, STORAGE_BUCKETS } from "@/lib/supabase/storage"
 import type { Database } from "@/lib/supabase/database.types"
 import { MaterialSelector, type SelectedMaterialItem } from "./material-selector"
 import { useAuth } from "@/contexts/auth-context"
 
-type BaustelleDb = Database["public"]["Tables"]["projects"]["Row"] // Behält den DB-Namen, aber wir nennen es Baustelle
+type BaustelleDb = Database["public"]["Tables"]["projects"]["Row"]
 type EntryImage = Pick<Database["public"]["Tables"]["entry_images"]["Row"], "id" | "image_path" | "file_name">
 
 const entrySchema = z
   .object({
     entry_date: z.string().min(1, "Datum ist erforderlich."),
-    start_time: z.string().min(1, "Startzeit ist erforderlich."), // Geändert von entry_time
-    end_time: z.string().min(1, "Endzeit ist erforderlich."), // NEU
-    project_id: z.string().uuid("Ungültige Baustellen ID.").optional().nullable(), // Text geändert
+    start_time: z.string().min(1, "Startzeit ist erforderlich."),
+    end_time: z.string().min(1, "Endzeit ist erforderlich."),
+    project_id: z.string().uuid("Ungültige Baustellen ID.").optional().nullable(),
     activity: z.string().min(3, "Tätigkeit muss mindestens 3 Zeichen haben."),
     notes: z.string().optional().nullable(),
   })
@@ -42,28 +40,29 @@ const entrySchema = z
     },
     {
       message: "Endzeit muss nach der Startzeit liegen.",
-      path: ["end_time"], // Fehler an das Endzeit-Feld binden
+      path: ["end_time"],
     },
   )
 
 type EntryFormData = z.infer<typeof entrySchema>
 
 interface EntryFormProps {
-  entry?: Entry | null
+  entry?: any | null
   onSuccess?: () => void
+  onSubmit?: (data: any, imageFiles?: File[]) => Promise<any>
+  userId?: string
+  baustellen?: BaustelleDb[]
 }
 
-export function EntryForm({ entry, onSuccess }: EntryFormProps) {
+export function EntryForm({ entry, onSuccess, onSubmit, userId, baustellen = [] }: EntryFormProps) {
   const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const [baustellen, setBaustellen] = useState<BaustelleDb[]>([]) // Geändert von projects
   const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterialItem[]>([])
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [existingImages, setExistingImages] = useState<EntryImage[]>(entry?.entry_images || [])
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -76,8 +75,8 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
     resolver: zodResolver(entrySchema),
     defaultValues: {
       entry_date: entry?.entry_date || new Date().toISOString().split("T")[0],
-      start_time: entry?.entry_time || "07:00", // Geändert von entry_time, Standard 07:00
-      end_time: entry?.end_time || new Date().toTimeString().split(" ")[0].substring(0, 5), // NEU, Standard aktuelle Zeit
+      start_time: entry?.entry_time || "07:00",
+      end_time: entry?.end_time || new Date().toTimeString().split(" ")[0].substring(0, 5),
       project_id: entry?.project_id || null,
       activity: entry?.activity || "",
       notes: entry?.notes || "",
@@ -85,35 +84,16 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
   })
 
   useEffect(() => {
-    async function loadBaustellen() {
-      // Geändert von loadProjects
-      try {
-        const fetchedBaustellen = await getBaustellen() // Geändert von getProjects
-        setBaustellen(fetchedBaustellen)
-      } catch (error) {
-        console.error("Error loading baustellen:", error) // Geändert
-        toast({
-          title: "Fehler",
-          description: "Baustellen konnten nicht geladen werden.", // Geändert
-          variant: "destructive",
-        })
-      }
-    }
-    loadBaustellen() // Geändert
-  }, [toast])
-
-  useEffect(() => {
     if (entry) {
       reset({
         entry_date: entry.entry_date,
-        start_time: entry.entry_time, // Geändert von entry_time
-        end_time: entry.end_time || new Date().toTimeString().split(" ")[0].substring(0, 5), // NEU
+        start_time: entry.entry_time,
+        end_time: entry.end_time || new Date().toTimeString().split(" ")[0].substring(0, 5),
         project_id: entry.project_id || null,
         activity: entry.activity,
         notes: entry.notes || "",
       })
 
-      // Materialien parsen
       try {
         const materials =
           typeof entry.materials_used === "string" ? JSON.parse(entry.materials_used) : entry.materials_used || []
@@ -129,8 +109,8 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
     } else {
       reset({
         entry_date: new Date().toISOString().split("T")[0],
-        start_time: "07:00", // Geändert von entry_time
-        end_time: new Date().toTimeString().split(" ")[0].substring(0, 5), // NEU
+        start_time: "07:00",
+        end_time: new Date().toTimeString().split(" ")[0].substring(0, 5),
         project_id: null,
         activity: "",
         notes: "",
@@ -142,40 +122,10 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
     }
   }, [entry, reset])
 
-  const validateFiles = (files: FileList): { valid: File[]; errors: string[] } => {
-    const valid: File[] = []
-    const errors: string[] = []
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-
-    Array.from(files).forEach((file) => {
-      if (file.size > maxSize) {
-        errors.push(`${file.name}: Datei zu groß (max. 10MB)`)
-      } else if (!allowedTypes.includes(file.type)) {
-        errors.push(`${file.name}: Dateityp nicht unterstützt`)
-      } else {
-        valid.push(file)
-      }
-    })
-
-    return { valid, errors }
-  }
-
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const { valid, errors } = validateFiles(event.target.files)
-
-      if (errors.length > 0) {
-        toast({
-          title: "Datei-Fehler",
-          description: errors.join(", "),
-          variant: "destructive",
-        })
-      }
-
-      if (valid.length > 0) {
-        setImageFiles((prevFiles) => [...prevFiles, ...valid])
-      }
+      const files = Array.from(event.target.files)
+      setImageFiles((prevFiles) => [...prevFiles, ...files])
     }
   }
 
@@ -188,8 +138,8 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
     setDeletedImageIds((prevIds) => [...prevIds, imageId])
   }
 
-  const onSubmit: SubmitHandler<EntryFormData> = async (data) => {
-    if (!user) {
+  const onSubmitForm: SubmitHandler<EntryFormData> = async (data) => {
+    if (!user && !userId) {
       toast({ title: "Fehler", description: "Benutzer nicht angemeldet.", variant: "destructive" })
       return
     }
@@ -199,43 +149,33 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
     try {
       const entryPayload = {
         ...data,
-        entry_time: data.start_time, // Map start_time zu entry_time für das Backend
+        entry_time: data.start_time,
         end_time: data.end_time,
         materials_used: JSON.stringify(selectedMaterials),
-        project_id: data.project_id, // Sicherstellen, dass project_id übergeben wird
-      }
-      // Entferne start_time aus dem Payload, da es durch entry_time ersetzt wurde
-      // @ts-ignore
-      delete entryPayload.start_time
-
-      let result
-      if (entry) {
-        result = await updateEntry(entry.id, entryPayload, imageFiles, deletedImageIds)
-      } else {
-        result = await createEntry(entryPayload, imageFiles)
+        project_id: data.project_id,
       }
 
-      if (result.success) {
-        toast({
-          title: "Erfolgreich",
-          description: `Eintrag wurde ${entry ? "aktualisiert" : "erstellt"}.`,
-        })
-
-        // Form zurücksetzen
-        reset()
-        setSelectedMaterials([])
-        setImageFiles([])
-        setExistingImages([])
-        setDeletedImageIds([])
-
-        router.refresh()
-        if (onSuccess) onSuccess()
-      } else {
-        toast({
-          title: "Fehler",
-          description: result.error || "Ein unbekannter Fehler ist aufgetreten.",
-          variant: "destructive",
-        })
+      if (onSubmit) {
+        const result = await onSubmit(entryPayload, imageFiles)
+        if (result?.success) {
+          toast({
+            title: "Erfolgreich",
+            description: `Eintrag wurde ${entry ? "aktualisiert" : "erstellt"}.`,
+          })
+          reset()
+          setSelectedMaterials([])
+          setImageFiles([])
+          setExistingImages([])
+          setDeletedImageIds([])
+          router.refresh()
+          if (onSuccess) onSuccess()
+        } else {
+          toast({
+            title: "Fehler",
+            description: result?.error || "Ein unbekannter Fehler ist aufgetreten.",
+            variant: "destructive",
+          })
+        }
       }
     } catch (error) {
       console.error("Form submission error:", error)
@@ -257,7 +197,7 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
           {entry ? "Details dieses Eintrags aktualisieren." : "Dokumentieren Sie Ihre Arbeit."}
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmitForm)}>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -368,12 +308,6 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
               rows={3}
               placeholder="Zusätzliche Notizen..."
             />
-            {errors.notes && (
-              <p className="text-sm text-red-500 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {errors.notes.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">
@@ -436,18 +370,6 @@ export function EntryForm({ entry, onSuccess }: EntryFormProps) {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Platzhalter für Spracheingabe */}
-          <div className="space-y-1.5 border-t pt-4">
-            <Label>Spracheingabe (Beta)</Label>
-            <Button type="button" variant="outline" disabled={true} className="w-full">
-              <Mic className="mr-2 h-4 w-4" />
-              Aufnahme Starten (Funktion in Entwicklung)
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Beschreiben Sie Ihren Eintrag. Die KI versucht, die Felder automatisch auszufüllen.
-            </p>
           </div>
         </CardContent>
         <CardFooter>
