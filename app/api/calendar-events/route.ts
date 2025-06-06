@@ -1,100 +1,42 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createSupabaseServerActionClient } from "@/lib/supabase/actions"
+import { NextResponse } from "next/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = await createSupabaseServerActionClient()
+    const supabase = createSupabaseServerClient()
 
-    // Simulierte Kalender-Events - in der Realität würden diese aus der DB kommen
-    const events = [
-      {
-        id: "1",
-        title: "Dacharbeiten Herr Müller",
-        start: new Date(2024, 11, 15, 8, 0),
-        end: new Date(2024, 11, 15, 16, 0),
-        resource: {
-          type: "project",
-          projectId: "1",
-          projectName: "Baustelle Müller",
-          description: "Dachziegel erneuern und Rinne reparieren",
-          location: "Hauptstraße 15, Hamburg",
-          priority: "high",
-          status: "planned",
-        },
-      },
-      {
-        id: "2",
-        title: "Material abholen",
-        start: new Date(2024, 11, 16, 9, 0),
-        end: new Date(2024, 11, 16, 10, 0),
-        resource: {
-          type: "task",
-          description: "Dachziegel und Rinnenteile beim Händler abholen",
-          location: "Baumarkt Schmidt",
-          priority: "medium",
-          status: "planned",
-        },
-      },
-      {
-        id: "3",
-        title: "Kundentermin Frau Weber",
-        start: new Date(2024, 11, 17, 14, 0),
-        end: new Date(2024, 11, 17, 15, 30),
-        resource: {
-          type: "appointment",
-          description: "Kostenvoranschlag für Balkonreparatur",
-          location: "Gartenstraße 8, Bremen",
-          priority: "medium",
-          status: "planned",
-        },
-      },
-      {
-        id: "4",
-        title: "Projektabgabe Schulze",
-        start: new Date(2024, 11, 20, 17, 0),
-        end: new Date(2024, 11, 20, 17, 0),
-        resource: {
-          type: "deadline",
-          projectId: "2",
-          projectName: "Baustelle Schulze",
-          description: "Finale Abnahme und Übergabe",
-          priority: "high",
-          status: "planned",
-        },
-      },
-    ]
+    const { data: events, error } = await supabase.from("calendar_events").select("*")
 
-    return NextResponse.json(events)
+    if (error) {
+      console.error("Error fetching calendar events:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Fallback für leere Datenbank
+    const calendarEvents = events || []
+
+    return NextResponse.json(calendarEvents)
   } catch (error) {
-    console.error("Calendar events error:", error)
-    return NextResponse.json({ error: "Fehler beim Laden der Termine" }, { status: 500 })
+    console.error("Unexpected error:", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
+    const supabase = createSupabaseServerClient()
     const eventData = await request.json()
-    const supabase = await createSupabaseServerActionClient()
 
-    // Hier würde normalerweise der Event in die DB gespeichert
-    // Für jetzt simulieren wir eine erfolgreiche Erstellung
+    const { data, error } = await supabase.from("calendar_events").insert(eventData).select()
 
-    const newEvent = {
-      id: Date.now().toString(),
-      ...eventData,
-      resource: {
-        type: eventData.type,
-        projectId: eventData.projectId,
-        description: eventData.description,
-        location: eventData.location,
-        priority: eventData.priority,
-        status: "planned",
-      },
+    if (error) {
+      console.error("Error creating calendar event:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(newEvent)
+    return NextResponse.json(data)
   } catch (error) {
-    console.error("Create calendar event error:", error)
-    return NextResponse.json({ error: "Fehler beim Erstellen des Termins" }, { status: 500 })
+    console.error("Unexpected error:", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }

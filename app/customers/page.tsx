@@ -1,6 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import CustomerManagement from "@/components/customers/customer-management"
-import { hasGoogleMapsApiKey } from "@/lib/google-maps-server"
 
 async function getCustomers() {
   const supabase = createSupabaseServerClient()
@@ -12,7 +11,7 @@ async function getCustomers() {
       return []
     }
 
-    return customers
+    return customers || []
   } catch (error) {
     console.error("Unexpected error fetching customers:", error)
     return []
@@ -21,11 +20,19 @@ async function getCustomers() {
 
 export default async function CustomersPage() {
   const customersData = await getCustomers()
-  const hasGoogleMaps = await hasGoogleMapsApiKey()
 
   return (
-    <div>
-      <CustomerManagement initialCustomers={customersData || []} hasGoogleMaps={hasGoogleMaps} />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">👥 Kunden</h1>
+          <p className="text-muted-foreground mt-2">Verwalte deine Kundendaten</p>
+        </div>
+
+        <div className="bg-card rounded-lg border shadow-sm">
+          <CustomerManagement initialCustomers={customersData} hasGoogleMaps={false} />
+        </div>
+      </div>
     </div>
   )
 }

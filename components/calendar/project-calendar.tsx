@@ -67,14 +67,15 @@ export function ProjectCalendar() {
   const [showNewEventDialog, setShowNewEventDialog] = useState(false)
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [newEvent, setNewEvent] = useState<NewEventForm>({
     title: "",
-    start: "",
-    end: "",
+    start: format(new Date(), "yyyy-MM-dd"),
+    end: format(new Date(), "yyyy-MM-dd"),
     startTime: "08:00",
     endTime: "17:00",
     type: "task",
-    projectId: "defaultProjectId", // Updated default value
+    projectId: "no-project", // Sicherer Default-Wert
     description: "",
     location: "",
     priority: "medium",
@@ -86,17 +87,29 @@ export function ProjectCalendar() {
 
   const loadCalendarData = async () => {
     setLoading(true)
+    setError(null)
+
     try {
       // Projekte laden
       const projectsResponse = await fetch("/api/projects")
+
+      if (!projectsResponse.ok) {
+        throw new Error(`Projects API returned ${projectsResponse.status}`)
+      }
+
       const projectsData = await projectsResponse.json()
-      setProjects(projectsData)
+      setProjects(projectsData || [])
 
       // Kalender-Events laden
       const eventsResponse = await fetch("/api/calendar-events")
+
+      if (!eventsResponse.ok) {
+        throw new Error(`Calendar events API returned ${eventsResponse.status}`)
+      }
+
       const eventsData = await eventsResponse.json()
 
-      const formattedEvents = eventsData.map((event: any) => ({
+      const formattedEvents = (eventsData || []).map((event: any) => ({
         ...event,
         start: new Date(event.start),
         end: new Date(event.end),
@@ -105,6 +118,7 @@ export function ProjectCalendar() {
       setEvents(formattedEvents)
     } catch (error) {
       console.error("Error loading calendar data:", error)
+      setError("Fehler beim Laden der Kalenderdaten")
       toast.error("Fehler beim Laden der Kalenderdaten")
     } finally {
       setLoading(false)
@@ -135,11 +149,14 @@ export function ProjectCalendar() {
         title: newEvent.title,
         start: startDateTime.toISOString(),
         end: endDateTime.toISOString(),
-        type: newEvent.type,
-        projectId: newEvent.projectId || null,
-        description: newEvent.description,
-        location: newEvent.location,
-        priority: newEvent.priority,
+        resource: {
+          type: newEvent.type,
+          projectId: newEvent.projectId === "no-project" ? null : newEvent.projectId,
+          description: newEvent.description,
+          location: newEvent.location,
+          priority: newEvent.priority,
+          status: "planned",
+        },
       }
 
       const response = await fetch("/api/calendar-events", {
@@ -154,12 +171,12 @@ export function ProjectCalendar() {
       setShowNewEventDialog(false)
       setNewEvent({
         title: "",
-        start: "",
-        end: "",
+        start: format(new Date(), "yyyy-MM-dd"),
+        end: format(new Date(), "yyyy-MM-dd"),
         startTime: "08:00",
         endTime: "17:00",
         type: "task",
-        projectId: "defaultProjectId", // Updated default value
+        projectId: "no-project",
         description: "",
         location: "",
         priority: "medium",
@@ -174,7 +191,7 @@ export function ProjectCalendar() {
   const eventStyleGetter = (event: CalendarEvent) => {
     let backgroundColor = "#3174ad"
 
-    switch (event.resource.type) {
+    switch (event.resource?.type) {
       case "project":
         backgroundColor = "#10B981"
         break
@@ -189,7 +206,7 @@ export function ProjectCalendar() {
         break
     }
 
-    if (event.resource.priority === "high") {
+    if (event.resource?.priority === "high") {
       backgroundColor = "#DC2626"
     }
 
@@ -244,6 +261,20 @@ export function ProjectCalendar() {
     )
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <div className="text-red-500 text-xl mb-4">⚠️ Fehler</div>
+          <p className="text-gray-600">{error}</p>
+          <Button onClick={loadCalendarData} className="mt-4">
+            Erneut versuchen
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -286,7 +317,7 @@ export function ProjectCalendar() {
                       onValueChange={(value: any) => setNewEvent({ ...newEvent, type: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Typ auswählen" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="project">🏗️ Projekt</SelectItem>
@@ -342,7 +373,7 @@ export function ProjectCalendar() {
                         <SelectValue placeholder="Projekt auswählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="defaultProjectId">Kein Projekt</SelectItem> {/* Updated value */}
+                        <SelectItem value="no-project">Kein Projekt</SelectItem>
                         {projects.map((project) => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.name}
@@ -358,7 +389,7 @@ export function ProjectCalendar() {
                       onValueChange={(value: any) => setNewEvent({ ...newEvent, priority: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Priorität wählen" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">📝 Niedrig</SelectItem>
@@ -451,7 +482,7 @@ export function ProjectCalendar() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3">
-                <span className="text-2xl">{getEventIcon(selectedEvent.resource.type)}</span>
+                <span className="text-2xl">{getEventIcon(selectedEvent.resource?.type || "")}</span>
                 {selectedEvent.title}
               </DialogTitle>
               <DialogDescription>Termin-Details</DialogDescription>
@@ -462,16 +493,16 @@ export function ProjectCalendar() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-600">Typ</Label>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{getEventIcon(selectedEvent.resource.type)}</span>
-                    <span className="capitalize">{selectedEvent.resource.type}</span>
+                    <span className="text-lg">{getEventIcon(selectedEvent.resource?.type || "")}</span>
+                    <span className="capitalize">{selectedEvent.resource?.type || "Termin"}</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-600">Priorität</Label>
-                  <Badge variant={getPriorityColor(selectedEvent.resource.priority || "medium")}>
-                    {selectedEvent.resource.priority === "high"
+                  <Badge variant={getPriorityColor(selectedEvent.resource?.priority || "medium")}>
+                    {selectedEvent.resource?.priority === "high"
                       ? "🔥 Hoch"
-                      : selectedEvent.resource.priority === "medium"
+                      : selectedEvent.resource?.priority === "medium"
                         ? "⚡ Mittel"
                         : "📝 Niedrig"}
                   </Badge>
@@ -486,7 +517,7 @@ export function ProjectCalendar() {
                     </span>
                   </div>
                 </div>
-                {selectedEvent.resource.location && (
+                {selectedEvent.resource?.location && (
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-gray-600">Ort</Label>
                     <div className="flex items-center gap-2">
@@ -498,7 +529,7 @@ export function ProjectCalendar() {
               </div>
 
               {/* Projekt-Information */}
-              {selectedEvent.resource.projectName && (
+              {selectedEvent.resource?.projectName && (
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-600">Projekt</Label>
                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -508,7 +539,7 @@ export function ProjectCalendar() {
               )}
 
               {/* Beschreibung */}
-              {selectedEvent.resource.description && (
+              {selectedEvent.resource?.description && (
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-600">Beschreibung</Label>
                   <div className="p-3 bg-gray-50 rounded-lg border">
@@ -522,20 +553,20 @@ export function ProjectCalendar() {
                 <Label className="text-sm font-medium text-gray-600">Status</Label>
                 <Badge
                   variant={
-                    selectedEvent.resource.status === "completed"
+                    selectedEvent.resource?.status === "completed"
                       ? "default"
-                      : selectedEvent.resource.status === "in-progress"
+                      : selectedEvent.resource?.status === "in-progress"
                         ? "secondary"
-                        : selectedEvent.resource.status === "cancelled"
+                        : selectedEvent.resource?.status === "cancelled"
                           ? "destructive"
                           : "outline"
                   }
                 >
-                  {selectedEvent.resource.status === "completed"
+                  {selectedEvent.resource?.status === "completed"
                     ? "✅ Abgeschlossen"
-                    : selectedEvent.resource.status === "in-progress"
+                    : selectedEvent.resource?.status === "in-progress"
                       ? "🔄 In Bearbeitung"
-                      : selectedEvent.resource.status === "cancelled"
+                      : selectedEvent.resource?.status === "cancelled"
                         ? "❌ Abgebrochen"
                         : "📅 Geplant"}
                 </Badge>

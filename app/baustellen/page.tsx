@@ -2,7 +2,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { BaustelleForm } from "@/components/baustellen/baustelle-form"
 import BaustellenListAdminView from "@/components/baustellen/baustelle-list-admin-view"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { hasGoogleMapsApiKey } from "@/lib/google-maps-server"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 
 async function getBaustellen() {
   const supabase = createSupabaseServerClient()
@@ -14,7 +15,7 @@ async function getBaustellen() {
       return []
     }
 
-    return baustellen
+    return baustellen || []
   } catch (error) {
     console.error("Unexpected error fetching baustellen:", error)
     return []
@@ -23,22 +24,33 @@ async function getBaustellen() {
 
 export default async function BaustellenPage() {
   const baustellenData = await getBaustellen()
-  const hasGoogleMaps = await hasGoogleMapsApiKey()
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-semibold mb-5">Baustellen Management</h1>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">🏗️ Baustellen</h1>
+            <p className="text-muted-foreground mt-2">Verwalte alle deine Baustellen</p>
+          </div>
 
-      <Dialog>
-        <DialogTrigger className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-5 inline-block">
-          Neue Baustelle erstellen
-        </DialogTrigger>
-        <DialogContent>
-          <BaustelleForm onSuccess={() => {}} hasGoogleMaps={hasGoogleMaps} />
-        </DialogContent>
-      </Dialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Neue Baustelle
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <BaustelleForm onSuccess={() => {}} hasGoogleMaps={false} />
+            </DialogContent>
+          </Dialog>
+        </div>
 
-      <BaustellenListAdminView hasGoogleMaps={hasGoogleMaps} />
+        <div className="bg-card rounded-lg border shadow-sm">
+          <BaustellenListAdminView hasGoogleMaps={false} />
+        </div>
+      </div>
     </div>
   )
 }
