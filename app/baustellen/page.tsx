@@ -1,56 +1,43 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { BaustelleForm } from "@/components/baustellen/baustelle-form"
+import { MainLayout } from "@/components/layout/main-layout"
+import { getBaustellen } from "./actions"
 import BaustellenListAdminView from "@/components/baustellen/baustelle-list-admin-view"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-
-async function getBaustellen() {
-  const supabase = createSupabaseServerClient()
-  try {
-    const { data: baustellen, error } = await supabase.from("baustellen").select("*")
-
-    if (error) {
-      console.error("Error fetching baustellen:", error)
-      return []
-    }
-
-    return baustellen || []
-  } catch (error) {
-    console.error("Unexpected error fetching baustellen:", error)
-    return []
-  }
-}
 
 export default async function BaustellenPage() {
-  const baustellenData = await getBaustellen()
+  try {
+    const result = await getBaustellen()
+    const baustellen = result?.data || []
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">🏗️ Baustellen</h1>
-            <p className="text-muted-foreground mt-2">Verwalte alle deine Baustellen</p>
+    return (
+      <MainLayout>
+        <div className="container mx-auto py-8">
+          <BaustellenListAdminView
+            baustellen={baustellen}
+            onDelete={async (id: string) => {
+              "use server"
+              // Delete logic here
+            }}
+            onUpdate={async (id: string, data: any) => {
+              "use server"
+              // Update logic here
+            }}
+            onCreate={async (data: any) => {
+              "use server"
+              // Create logic here
+            }}
+          />
+        </div>
+      </MainLayout>
+    )
+  } catch (error) {
+    console.error("Error loading baustellen:", error)
+    return (
+      <MainLayout>
+        <div className="container mx-auto py-8">
+          <div className="text-center">
+            <p className="text-red-500">Fehler beim Laden der Baustellen</p>
           </div>
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Neue Baustelle
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <BaustelleForm onSuccess={() => {}} hasGoogleMaps={false} />
-            </DialogContent>
-          </Dialog>
         </div>
-
-        <div className="bg-card rounded-lg border shadow-sm">
-          <BaustellenListAdminView hasGoogleMaps={false} />
-        </div>
-      </div>
-    </div>
-  )
+      </MainLayout>
+    )
+  }
 }

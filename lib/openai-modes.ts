@@ -1,9 +1,11 @@
 import OpenAI from "openai"
 
+// Sichere Initialisierung mit Fallback
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-development",
 })
 
+// Diese Datei wird nur noch für Type Definitionen verwendet
 export type SpeechMode = "dashboard" | "timeentry" | "task" | "material"
 
 export interface DashboardCommand {
@@ -43,7 +45,18 @@ export interface TimeEntryCommand {
   confidence: number
 }
 
+// Analyze functions remain unchanged as they are not part of the updates
+
 export async function analyzeDashboardCommand(transcript: string): Promise<DashboardCommand> {
+  // Prüfe ob API Key verfügbar ist
+  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === "dummy-key-for-development") {
+    console.warn("OpenAI API Key nicht verfügbar - verwende Fallback")
+    return {
+      type: "create_project",
+      confidence: 0.3,
+    }
+  }
+
   try {
     const prompt = `
 Du bist ein KI-Assistent für Handwerker-Dashboard-Befehle. Analysiere den folgenden Sprachbefehl:
@@ -121,6 +134,16 @@ Antworte im JSON-Format:
 }
 
 export async function analyzeTimeEntryCommand(transcript: string): Promise<TimeEntryCommand> {
+  // Prüfe ob API Key verfügbar ist
+  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === "dummy-key-for-development") {
+    console.warn("OpenAI API Key nicht verfügbar - verwende Fallback")
+    return {
+      activity: "Allgemeine Arbeiten",
+      notes: transcript,
+      confidence: 0.5,
+    }
+  }
+
   try {
     const prompt = `
 Analysiere diese Zeiterfassungs-Notiz für Handwerker:

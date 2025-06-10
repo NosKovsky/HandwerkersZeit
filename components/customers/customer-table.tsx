@@ -9,12 +9,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { Customer } from "@/app/customers/actions"
 
 interface CustomerTableProps {
-  customers: Customer[]
+  customers?: Customer[]
   onEdit?: (customer: Customer) => void
   onDelete?: (customerId: string) => void
 }
 
-function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProps) {
+function CustomerTable({ customers = [], onEdit, onDelete }: CustomerTableProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const handleDelete = async (customerId: string) => {
@@ -27,6 +27,9 @@ function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProps) {
       setDeletingId(null)
     }
   }
+
+  // Sichere Behandlung von undefined/null customers
+  const safeCustomers = Array.isArray(customers) ? customers : []
 
   return (
     <div className="rounded-md border">
@@ -43,14 +46,14 @@ function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {customers.length === 0 ? (
+          {safeCustomers.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                 Keine Kunden gefunden
               </TableCell>
             </TableRow>
           ) : (
-            customers.map((customer) => (
+            safeCustomers.map((customer) => (
               <TableRow key={customer.id}>
                 <TableCell className="font-medium">{customer.name}</TableCell>
                 <TableCell>{customer.contact_person || "-"}</TableCell>
