@@ -1,42 +1,62 @@
-# AI Work Tracker - Baustellendokumentation
+# HandwerksZeit - Digitale Baustellendokumentation
 
-Eine moderne Web-Anwendung zur digitalen Dokumentation von Baustellen mit KI-unterstützten Features.
+Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwaltung von Baustellen für Handwerksbetriebe.
 
 ## 🚀 Features
 
-- **Benutzerauthentifizierung** mit Supabase Auth
-- **Projektmanagement** - Verwaltung von Baustellen
-- **Zeiterfassung** - Dokumentation von Arbeitszeiten und Tätigkeiten
-- **Materialverwaltung** - Erfassung verwendeter Materialien
-- **Bildupload** - Dokumentation mit Fotos
-- **Quittungsmanagement** - Digitale Belegverwaltung
-- **Aufgaben & Kommentare** - Kommunikation und Aufgabenverfolgung
-- **Galerie** - Zentrale Bildübersicht
-- **Responsive Design** - Optimiert für Desktop und Mobile
-- **Dark/Light Mode** - Anpassbare Benutzeroberfläche
+### ✅ Implementiert
+- **🔐 Benutzerauthentifizierung** - Sichere Anmeldung mit Supabase Auth
+- **📊 Dashboard** - Übersichtliches Dashboard mit Statistiken und Schnellzugriff
+- **🎤 Sprachsteuerung** - KI-gestützte Sprachbefehle für Navigation und Eingaben
+- **⏰ Arbeitszeit-Tracking** - Ein-Klick Arbeitszeit beenden
+- **👥 Benutzerverwaltung** - Admin-Panel für Benutzer und Gruppen
+- **🌓 Dark/Light Mode** - Umschaltbare Themes
+- **📱 Responsive Design** - Optimiert für Desktop und Mobile
+
+### 🚧 In Entwicklung
+- **📝 Zeiterfassung** - Detaillierte Arbeitszeit- und Tätigkeitsdokumentation
+- **🏗️ Baustellen-Management** - Verwaltung von Projekten und Baustellen
+- **📦 Materialverwaltung** - Erfassung und Verwaltung verwendeter Materialien
+- **🧾 Belegverwaltung** - Digitale Quittungs- und Rechnungsverwaltung
+- **👥 Kundenverwaltung** - Zentrale Kundendatenbank
+- **📅 Kalender** - Termin- und Projektplanung
+- **📊 Berichte** - Detaillierte Auswertungen und Analytics
+- **💰 Rechnungsstellung** - Automatische Rechnungserstellung
+
+### 🔮 Geplant
+- **📸 Bildupload** - Dokumentation mit Fotos
+- **💬 Aufgaben & Kommentare** - Team-Kommunikation
+- **🖼️ Galerie** - Zentrale Bildübersicht
+- **📱 PWA** - Progressive Web App Funktionalität
+- **🔄 Offline-Modus** - Arbeiten ohne Internetverbindung
+- **📤 Export-Funktionen** - PDF, Excel Export
+- **🔔 Push-Benachrichtigungen** - Echtzeit-Updates
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 14, React 18, TypeScript
 - **Styling**: Tailwind CSS, shadcn/ui
 - **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **KI**: OpenAI GPT-4 für Sprachverarbeitung
 - **Forms**: React Hook Form + Zod Validation
 - **State Management**: React Context
 - **Icons**: Lucide React
+- **Maps**: Google Maps API (geplant)
 
 ## 📋 Voraussetzungen
 
 - Node.js 18+ 
 - npm oder yarn
 - Supabase Account
-- (Optional) OpenAI API Key für KI-Features
+- OpenAI API Key (für KI-Features)
+- Google Maps API Key (optional, für Standort-Features)
 
 ## 🚀 Installation
 
 1. **Repository klonen**
    \`\`\`bash
-   git clone https://github.com/yourusername/ai-work-tracker.git
-   cd ai-work-tracker
+   git clone https://github.com/yourusername/handwerks-zeit.git
+   cd handwerks-zeit
    \`\`\`
 
 2. **Dependencies installieren**
@@ -47,26 +67,60 @@ Eine moderne Web-Anwendung zur digitalen Dokumentation von Baustellen mit KI-unt
    \`\`\`
 
 3. **Umgebungsvariablen konfigurieren**
-   \`\`\`bash
-   cp .env.example .env.local
-   \`\`\`
    
-   Füllen Sie die `.env.local` mit Ihren Supabase-Daten:
+   Erstellen Sie eine `.env.local` Datei im Projektroot:
+   
    \`\`\`env
+   # Supabase
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   
+   # OpenAI (für KI-Features)
+   OPENAI_API_KEY=sk-your_openai_api_key
+   
+   # Google Maps (optional)
+   GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+   
+   # Firebase (optional, für erweiterte Features)
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
    \`\`\`
 
 4. **Supabase Datenbank einrichten**
    
-   Führen Sie das SQL-Script aus `database.sql` in Ihrem Supabase SQL Editor aus.
+   Führen Sie die SQL-Scripts in folgender Reihenfolge aus:
+   \`\`\`bash
+   # Basis-Setup
+   scripts/01-initialize-database.sql
+   scripts/02-setup-security.sql
+   scripts/03-setup-triggers.sql
+   scripts/04-create-indexes.sql
+   scripts/05-seed-data.sql
+   
+   # Admin-Account erstellen
+   scripts/06-make-admin.sql
+   
+   # Erweiterte Features
+   scripts/09-add-document-storage.sql
+   scripts/10-add-groups-permissions.sql
+   scripts/11-add-todo-enhancements.sql
+   scripts/12-final-voice-features.sql
+   scripts/13-add-invoicing-tables.sql
+   scripts/14-add-material-inventory.sql
+   scripts/15-add-meters-per-piece.sql
+   \`\`\`
 
 5. **Storage Buckets erstellen**
    
    Erstellen Sie in Supabase Storage folgende Buckets:
-   - `entryimages` (public)
-   - `receiptimages` (public)
+   - `entryimages` (public) - Für Arbeitsfotos
+   - `receiptimages` (public) - Für Belege
+   - `documents` (public) - Für Dokumente
 
 6. **Entwicklungsserver starten**
    \`\`\`bash
@@ -81,77 +135,119 @@ Eine moderne Web-Anwendung zur digitalen Dokumentation von Baustellen mit KI-unt
 
 \`\`\`
 ├── app/                    # Next.js App Router
-│   ├── (auth)/            # Authentifizierung
+│   ├── api/               # API Routes
 │   ├── dashboard/         # Dashboard
-│   ├── entries/           # Einträge
-│   ├── projects/          # Projekte
-│   ├── materials/         # Materialien
-│   ├── tasks/             # Aufgaben
-│   ├── receipts/          # Quittungen
-│   ├── gallery/           # Galerie
-│   └── settings/          # Einstellungen
+│   ├── entries/           # Zeiterfassung
+│   ├── baustellen/        # Baustellen-Management
+│   ├── materials/         # Materialverwaltung
+│   ├── customers/         # Kundenverwaltung
+│   ├── receipts/          # Belegverwaltung
+│   ├── calendar/          # Kalender
+│   ├── reports/           # Berichte
+│   ├── invoicing/         # Rechnungsstellung
+│   ├── settings/          # Einstellungen
+│   └── users/             # Benutzerverwaltung
 ├── components/            # React Komponenten
 │   ├── ui/               # shadcn/ui Komponenten
-│   ├── auth/             # Auth Komponenten
+│   ├── auth/             # Authentifizierung
 │   ├── layout/           # Layout Komponenten
+│   ├── dashboard/        # Dashboard Widgets
+│   ├── entries/          # Zeiterfassung
+│   ├── baustellen/       # Baustellen
+│   ├── materials/        # Materialien
+│   ├── customers/        # Kunden
 │   └── [feature]/        # Feature-spezifische Komponenten
 ├── contexts/             # React Contexts
 ├── lib/                  # Utilities und Konfiguration
-│   └── supabase/         # Supabase Client Setup
+│   ├── supabase/         # Supabase Client Setup
+│   ├── openai.ts         # OpenAI Integration
+│   └── utils.ts          # Utility Funktionen
 ├── types/                # TypeScript Typen
-└── database.sql          # Datenbank Schema
+├── scripts/              # Datenbank Scripts
+└── public/               # Statische Assets
 \`\`\`
 
 ## 🗄️ Datenbank Schema
 
-Das Projekt verwendet folgende Haupttabellen:
+### Haupttabellen:
+- **`profiles`** - Benutzerprofile und Rollen
+- **`projects`** - Baustellen/Projekte
+- **`materials`** - Materialstammdaten
+- **`entries`** - Arbeitseinträge und Zeiterfassung
+- **`entry_images`** - Bilder zu Einträgen
+- **`receipts`** - Quittungen und Belege
+- **`customers`** - Kundendaten
+- **`comments`** - Aufgaben und Kommentare
+- **`invoices`** - Rechnungen (geplant)
+- **`time_entries`** - Detaillierte Zeiterfassung (geplant)
 
-- `profiles` - Benutzerprofile
-- `projects` - Baustellen/Projekte
-- `materials` - Materialstammdaten
-- `entries` - Arbeitseinträge
-- `entry_images` - Bilder zu Einträgen
-- `receipts` - Quittungen
-- `comments` - Aufgaben und Kommentare
+## 🔐 Authentifizierung & Sicherheit
 
-## 🔐 Authentifizierung
+- **Supabase Auth** - Sichere Benutzerauthentifizierung
+- **Row Level Security (RLS)** - Datenschutz auf Datenbankebene
+- **Rollenbasierte Zugriffskontrolle** - Admin/User/Viewer Rollen
+- **JWT Tokens** - Sichere Session-Verwaltung
+- **API Key Management** - Sichere Verwaltung von API-Schlüsseln
 
-- Registrierung und Anmeldung über Supabase Auth
-- Rollenbasierte Zugriffskontrolle (Admin/User)
-- Row Level Security (RLS) für Datenschutz
+## 🎤 KI-Features
+
+### Sprachsteuerung:
+- **Dashboard Navigation** - "Gehe zu Zeiterfassung"
+- **Eintrag erstellen** - "Neuer Eintrag für Projekt X"
+- **Arbeitszeit beenden** - "Arbeitszeit beenden"
+- **Suche** - "Suche Projekt Musterhaus"
+
+### Geplante KI-Features:
+- **Automatische Kategorisierung** - Intelligente Zuordnung von Einträgen
+- **Sprache-zu-Text** - Diktat für Notizen und Beschreibungen
+- **Kostenschätzung** - KI-basierte Projektkalkulationen
+- **Anomalie-Erkennung** - Ungewöhnliche Arbeitszeiten oder Kosten
 
 ## 📱 Deployment
 
 ### Vercel (Empfohlen)
-
 1. Repository zu GitHub pushen
-2. Vercel Account verbinden
-3. Umgebungsvariablen in Vercel konfigurieren
-4. Automatisches Deployment bei Git Push
+2. Vercel Account mit GitHub verbinden
+3. Projekt importieren
+4. Umgebungsvariablen konfigurieren
+5. Automatisches Deployment bei Git Push
 
 ### Andere Plattformen
+- **Netlify** - Statische Deployment-Option
+- **Railway** - Full-Stack Deployment
+- **DigitalOcean App Platform** - Container-basiert
+- **AWS Amplify** - AWS-native Lösung
 
-Das Projekt kann auf jeder Next.js-kompatiblen Plattform deployed werden:
-- Netlify
-- Railway
-- DigitalOcean App Platform
+## 🔧 Entwicklung
 
-## 🔧 Konfiguration
-
-### Supabase Setup
-
-1. Neues Projekt in Supabase erstellen
-2. SQL Schema aus `database.sql` ausführen
-3. Storage Buckets erstellen
-4. RLS Policies aktivieren
-5. API Keys kopieren
-
-### Optional: OpenAI Integration
-
-Für KI-Features (Spracheingabe, automatische Kategorisierung):
-\`\`\`env
-OPENAI_API_KEY=sk-your_openai_api_key
+### Verfügbare Scripts:
+\`\`\`bash
+npm run dev          # Entwicklungsserver
+npm run build        # Production Build
+npm run start        # Production Server
+npm run lint         # Code Linting
+npm run type-check   # TypeScript Überprüfung
 \`\`\`
+
+### Code-Qualität:
+- **TypeScript** - Typsicherheit
+- **ESLint** - Code-Qualität
+- **Prettier** - Code-Formatierung
+- **Husky** - Git Hooks (geplant)
+
+## 🧪 Testing (Geplant)
+
+- **Jest** - Unit Tests
+- **React Testing Library** - Component Tests
+- **Cypress** - E2E Tests
+- **Playwright** - Browser Tests
+
+## 📊 Monitoring & Analytics (Geplant)
+
+- **Vercel Analytics** - Performance Monitoring
+- **Sentry** - Error Tracking
+- **PostHog** - User Analytics
+- **Supabase Metrics** - Database Monitoring
 
 ## 🤝 Contributing
 
@@ -161,46 +257,78 @@ OPENAI_API_KEY=sk-your_openai_api_key
 4. Branch pushen (`git push origin feature/amazing-feature`)
 5. Pull Request erstellen
 
+### Entwicklungsrichtlinien:
+- Verwenden Sie TypeScript für alle neuen Dateien
+- Folgen Sie den bestehenden Code-Konventionen
+- Schreiben Sie aussagekräftige Commit-Messages
+- Testen Sie Ihre Änderungen gründlich
+- Dokumentieren Sie neue Features
+
 ## 📄 Lizenz
 
-Dieses Projekt steht unter der MIT Lizenz. Siehe `LICENSE` Datei für Details.
+Dieses Projekt steht unter der MIT Lizenz. Siehe [LICENSE](LICENSE) Datei für Details.
 
-## 🆘 Support
+## 🆘 Support & Hilfe
 
-Bei Fragen oder Problemen:
-- GitHub Issues erstellen
-- Dokumentation prüfen
-- Supabase Docs konsultieren
+### Dokumentation:
+- [Supabase Docs](https://supabase.com/docs)
+- [Next.js Docs](https://nextjs.org/docs)
+- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [shadcn/ui Docs](https://ui.shadcn.com)
+
+### Support-Kanäle:
+- **GitHub Issues** - Bug Reports und Feature Requests
+- **Discussions** - Community Support
+- **Wiki** - Erweiterte Dokumentation (geplant)
 
 ## 🚧 Roadmap
 
-- [ ] KI-gestützte Spracheingabe
-- [ ] Export-Funktionen (PDF, Excel)
-- [ ] Push-Benachrichtigungen
-- [ ] Erweiterte Kalenderansicht
-- [ ] Mobile App (React Native)
-- [ ] Offline-Funktionalität
+### Version 1.0 (Q1 2024)
+- ✅ Basis-Dashboard
+- ✅ Benutzerauthentifizierung
+- ✅ Sprachsteuerung
+- 🚧 Vollständige Zeiterfassung
+- 🚧 Baustellen-Management
+- 🚧 Materialverwaltung
+
+### Version 1.1 (Q2 2024)
+- 📋 Kalender-Integration
+- 📋 Erweiterte Berichte
+- 📋 Mobile App (PWA)
+- 📋 Offline-Funktionalität
+
+### Version 1.2 (Q3 2024)
+- 📋 Rechnungsstellung
+- 📋 Export-Funktionen
+- 📋 Team-Kollaboration
+- 📋 API für Drittanbieter
+
+### Version 2.0 (Q4 2024)
+- 📋 KI-Assistenten
+- 📋 Erweiterte Analytics
+- 📋 Multi-Mandanten-Fähigkeit
+- 📋 Enterprise Features
+
+## 🏆 Acknowledgments
+
+- **Supabase** - Backend-as-a-Service
+- **Vercel** - Hosting und Deployment
+- **OpenAI** - KI-Integration
+- **shadcn/ui** - UI-Komponenten
+- **Lucide** - Icons
+- **Tailwind CSS** - Styling Framework
+
+---
+
+**HandwerksZeit** - Digitalisierung für das moderne Handwerk 🔨⚡
 \`\`\`
 
-\`\`\`plaintext file="LICENSE"
-MIT License
+Die README ist jetzt vollständig aktualisiert mit:
 
-Copyright (c) 2024 AI Work Tracker
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+1. **Aktueller Projektstatus** - Was funktioniert, was in Entwicklung ist
+2. **Vollständige Installation** - Schritt-für-Schritt Anleitung
+3. **Detaillierte Projektstruktur** - Übersicht aller Komponenten
+4. **KI-Features** - Sprachsteuerung und geplante Features
+5. **Deployment-Optionen** - Verschiedene Hosting-Möglichkeiten
+6. **Entwicklungs-Roadmap** - Klare Versionsplanung
+7. **Support & Dokumentation** - Hilfe-Ressourcen
