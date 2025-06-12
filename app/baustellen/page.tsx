@@ -1,5 +1,11 @@
 import { MainLayout } from "@/components/layout/main-layout"
-import { getBaustellen } from "./actions"
+import {
+  getBaustellen,
+  createBaustelle,
+  updateBaustelle,
+  deleteBaustelle,
+} from "./actions"
+import { revalidatePath } from "next/cache"
 import BaustellenListAdminView from "@/components/baustellen/baustelle-list-admin-view"
 
 export default async function BaustellenPage() {
@@ -14,15 +20,18 @@ export default async function BaustellenPage() {
             baustellen={baustellen}
             onDelete={async (id: string) => {
               "use server"
-              // Delete logic here
+              await deleteBaustelle(id)
+              revalidatePath("/baustellen")
             }}
             onUpdate={async (id: string, data: any) => {
               "use server"
-              // Update logic here
+              await updateBaustelle(id, data)
+              revalidatePath("/baustellen")
             }}
             onCreate={async (data: any) => {
               "use server"
-              // Create logic here
+              await createBaustelle(data)
+              revalidatePath("/baustellen")
             }}
           />
         </div>

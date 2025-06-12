@@ -4,6 +4,16 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog"
+import { BaustelleForm } from "./baustelle-form"
 import { MapPin, Calendar, User, Trash2, Edit, Plus } from "lucide-react"
 
 interface Baustelle {
@@ -33,11 +43,10 @@ function BaustellenListAdminView({ baustellen = [], onDelete, onUpdate, onCreate
   const [editingBaustelle, setEditingBaustelle] = useState<Baustelle | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [baustelleToDelete, setBaustelleToDelete] = useState<Baustelle | null>(null)
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Sind Sie sicher, dass Sie diese Baustelle löschen möchten?")) {
-      await onDelete(id)
-    }
+  const handleDelete = (baustelle: Baustelle) => {
+    setBaustelleToDelete(baustelle)
   }
 
   const handleEdit = (baustelle: Baustelle) => {
@@ -91,7 +100,7 @@ function BaustellenListAdminView({ baustellen = [], onDelete, onUpdate, onCreate
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(baustelle)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(baustelle.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(baustelle)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -124,7 +133,59 @@ function BaustellenListAdminView({ baustellen = [], onDelete, onUpdate, onCreate
         </div>
       )}
 
-      {/* Dialoge für Create/Edit würden hier implementiert werden */}
+      {/* Dialog für Baustelle erstellen/bearbeiten */}
+      <Dialog open={isCreateDialogOpen || isEditDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsCreateDialogOpen(false)
+          setIsEditDialogOpen(false)
+          setEditingBaustelle(null)
+        }
+      }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {editingBaustelle ? "Baustelle bearbeiten" : "Neue Baustelle"}
+            </DialogTitle>
+          </DialogHeader>
+          <BaustelleForm
+            baustelle={editingBaustelle ?? undefined}
+            onSuccess={() => {
+              setIsCreateDialogOpen(false)
+              setIsEditDialogOpen(false)
+              setEditingBaustelle(null)
+            }}
+            onSubmit={editingBaustelle ? handleUpdate : handleCreate}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog für Löschbestätigung */}
+      <Dialog open={!!baustelleToDelete} onOpenChange={() => setBaustelleToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Baustelle löschen bestätigen</DialogTitle>
+            <DialogDescription>
+              Sind Sie sicher, dass Sie die Baustelle "{baustelleToDelete?.name}" endgültig löschen möchten?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Abbrechen</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (baustelleToDelete) {
+                  await onDelete(baustelleToDelete.id)
+                  setBaustelleToDelete(null)
+                }
+              }}
+            >
+              Löschen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

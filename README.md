@@ -12,10 +12,10 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
 - **👥 Benutzerverwaltung** - Admin-Panel für Benutzer und Gruppen
 - **🌓 Dark/Light Mode** - Umschaltbare Themes
 - **📱 Responsive Design** - Optimiert für Desktop und Mobile
+- **🏗️ Baustellen-Management** - Verwaltung von Projekten und Baustellen
 
 ### 🚧 In Entwicklung
 - **📝 Zeiterfassung** - Detaillierte Arbeitszeit- und Tätigkeitsdokumentation
-- **🏗️ Baustellen-Management** - Verwaltung von Projekten und Baustellen
 - **📦 Materialverwaltung** - Erfassung und Verwaltung verwendeter Materialien
 - **🧾 Belegverwaltung** - Digitale Quittungs- und Rechnungsverwaltung
 - **👥 Kundenverwaltung** - Zentrale Kundendatenbank
@@ -288,7 +288,7 @@ Dieses Projekt steht unter der MIT Lizenz. Siehe [LICENSE](LICENSE) Datei für D
 - ✅ Benutzerauthentifizierung
 - ✅ Sprachsteuerung
 - 🚧 Vollständige Zeiterfassung
-- 🚧 Baustellen-Management
+- ✅ Baustellen-Management
 - 🚧 Materialverwaltung
 
 ### Version 1.1 (Q2 2024)
