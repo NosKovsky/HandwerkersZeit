@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/server"
-// import { OpenAI } from "openai"; // Später für Whisper & GPT
+import OpenAI from "openai"
 
-// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function POST(request: NextRequest) {
   const supabase = createSupabaseRouteHandlerClient()
@@ -26,44 +26,90 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Keine Audiodatei empfangen" }, { status: 400 })
     }
 
-    // TODO: Implement Whisper Transkription
-    // const transcriptionResponse = await openai.audio.transcriptions.create({
-    //   model: "whisper-1",
-    //   file: audioFile,
-    // });
-    // const transcript = transcriptionResponse.text;
-    const transcript =
-      "Beispiel Transkript: Heute 14 Uhr Baustelle Alpha, Material 5 Meter Rinne und 10 Haken, Tätigkeit Dachrinne montiert." // Platzhalter
+    // Whisper Transkription
+    const audioBuffer = Buffer.from(await audioFile.arrayBuffer())
+    const fileForOpenAi = new File([audioBuffer], audioFile.name, {
+      type: audioFile.type,
+    })
+    const transcriptionResponse = await openai.audio.transcriptions.create({
+      model: "whisper-1",
+      file: fileForOpenAi,
+      response_format: "text",
+      language: "de",
+    })
+    const transcript = transcriptionResponse.trim()
 
-    // TODO: Implement GPT-4o Datenextraktion
-    // const gptPrompt = `Extrahiere aus dem folgenden Text die Felder für einen Baustelleneintrag:
-    // Datum (YYYY-MM-DD), Uhrzeit (HH:MM), Baustelle (Name), Tätigkeit, Material (Liste von {name, menge, einheit}), Notizen.
-    // Text: "${transcript}"
-    // Antworte nur im JSON Format: {"date": "...", "time": "...", ...}`;
-    // const gptResponse = await openai.chat.completions.create({
-    //    model: "gpt-4o", // oder gpt-3.5-turbo für Kostenersparnis
-    //    messages: [{ role: "user", content: gptPrompt }],
-    //    response_format: { type: "json_object" },
-    // });
-    // const extractedData = JSON.parse(gptResponse.choices[0].message.content || "{}");
-    const extractedData = {
-      // Platzhalter
-      entry_date: new Date().toISOString().split("T")[0],
-      entry_time: new Date().toTimeString().split(" ")[0].substring(0, 5),
-      project_name_guess: "Baustelle Alpha", // Muss dann zu project_id aufgelöst werden
-      activity: "Dachrinne montiert (via Sprache)",
-      materials_guess: [
-        { name: "Rinne", quantity: 5, unit: "Meter" },
-        { name: "Haken", quantity: 10, unit: "Stk" },
-      ],
-      notes: `Transkript: ${transcript}`,
+    // GPT-4o Datenextraktion
+    const gptPrompt = `Extrahiere aus dem folgenden Text die Felder für einen Baustelleneintrag:
+Datum (YYYY-MM-DD), Uhrzeit (HH:MM), Baustelle (Name), Tätigkeit, Material (Liste von {name, menge, einheit}), Notizen.
+Text: "${transcript}"
+Antworte nur im JSON Format: {"entry_date":"","entry_time":"","project_name_guess":"","activity":"","materials_guess":[{"name":"","quantity":0,"unit":""}],"notes":""}`
+
+    const gptResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: gptPrompt }],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    })
+
+    const extractedData = JSON.parse(
+      gptResponse.choices[0]?.message?.content ?? "{}",
+    ) as {
+      entry_date: string
+      entry_time: string
+      project_name_guess?: string
+      activity: string
+      materials_guess: Array<{ name: string; quantity: number; unit: string }>
+      notes: string
     }
 
-    // TODO: Logik zum Abgleichen von project_name_guess mit existierenden Projekten
-    // TODO: Logik zum Abgleichen von materials_guess mit existierenden Materialien und Erstellen von materials_used JSON
+    // Projekt anhand des Namens finden
+    let project_id: string | null = null
+    if (extractedData.project_name_guess) {
+      const { data: project } = await supabase
+        .from("projects")
+        .select("id")
+        .ilike("name", `%${extractedData.project_name_guess}%`)
+        .limit(1)
+        .single()
+      if (project) {
+        project_id = project.id
+      }
+    }
 
-    // Fürs Erste geben wir die extrahierten Daten zurück
-    return NextResponse.json({ success: true, transcript, extractedData })
+    // Materialien zuordnen
+    const materials_used: {
+      material_id: string
+      name: string
+      unit: string | null
+      quantity: number
+    }[] = []
+    if (Array.isArray(extractedData.materials_guess)) {
+      for (const mat of extractedData.materials_guess) {
+        const { data: material } = await supabase
+          .from("materials")
+          .select("id, name, unit")
+          .ilike("name", `%${mat.name}%`)
+          .limit(1)
+          .single()
+        if (material) {
+          materials_used.push({
+            material_id: material.id,
+            name: material.name,
+            unit: material.unit,
+            quantity: mat.quantity,
+          })
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      transcript,
+      project_id,
+      materials_used,
+      extractedData,
+    })
   } catch (error) {
     console.error("Error in speech-to-entry API:", error)
     const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler"
