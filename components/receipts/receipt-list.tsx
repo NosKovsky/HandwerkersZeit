@@ -4,6 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { useState, useEffect } from "react"
 import { getReceipts, deleteReceipt, type Receipt } from "@/app/receipts/actions"
+import { getProjects } from "@/app/projects/actions"
+import type { Database } from "@/lib/supabase/database.types"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import type { DateRange } from "react-day-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { receiptCategories } from "./receipt-form"
 import { Button } from "@/components/ui/button"
 import { PlusCircle, Edit, Trash2, Search, Loader2, Briefcase, CalendarDays, DollarSign } from "lucide-react"
 import {
@@ -21,6 +33,8 @@ import { Input } from "@/components/ui/input"
 import { useAuth } from "@/contexts/auth-context"
 import { Badge } from "@/components/ui/badge"
 
+type Project = Database["public"]["Tables"]["projects"]["Row"]
+
 export function ReceiptList() {
   const { isAdmin, user } = useAuth()
   const [receipts, setReceipts] = useState<Receipt[]>([])
@@ -30,15 +44,38 @@ export function ReceiptList() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null)
   const [receiptToDelete, setReceiptToDelete] = useState<Receipt | null>(null)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [selectedProject, setSelectedProject] = useState("all")
+  const [categoryFilter, setCategoryFilter] = useState("all")
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   const { toast } = useToast()
+
+  useEffect(() => {
+    async function loadProjects() {
+      try {
+        const data = await getProjects()
+        setProjects(data)
+      } catch (e) {
+        console.error("Fehler beim Laden der Projekte", e)
+      }
+    }
+    loadProjects()
+  }, [])
 
   const fetchReceipts = async () => {
     setIsLoading(true)
     setError(null)
     try {
       const data = await getReceipts({
-        /* TODO: Filter hier einbauen */
+        projectId: selectedProject !== "all" ? selectedProject : undefined,
+        category: categoryFilter !== "all" ? categoryFilter : undefined,
+        dateFrom: dateRange?.from
+          ? dateRange.from.toISOString().split("T")[0]
+          : undefined,
+        dateTo: dateRange?.to
+          ? dateRange.to.toISOString().split("T")[0]
+          : undefined,
       })
       setReceipts(data)
     } catch (e) {
@@ -50,7 +87,7 @@ export function ReceiptList() {
 
   useEffect(() => {
     if (user) fetchReceipts()
-  }, [user])
+  }, [user, selectedProject, categoryFilter, dateRange])
 
   const handleFormSuccess = () => {
     setIsFormOpen(false)
@@ -105,7 +142,7 @@ export function ReceiptList() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Search className="h-5 w-5 text-muted-foreground" />
         <Input
           placeholder="Quittungen durchsuchen..."
@@ -113,7 +150,37 @@ export function ReceiptList() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
-        {/* TODO: Weitere Filter (Datum, Kategorie, Projekt) */}
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Kategorie" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle Kategorien</SelectItem>
+            {receiptCategories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selectedProject} onValueChange={setSelectedProject}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Projekt" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle Projekte</SelectItem>
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <DatePickerWithRange
+          date={dateRange}
+          onDateChange={setDateRange}
+          className="w-auto"
+        />
       </div>
 
       {isLoading && (

@@ -48,6 +48,12 @@ const menuItems = [
     badge: null,
   },
   {
+    title: "Bestand",
+    icon: Package,
+    href: "/materials/inventory",
+    badge: null,
+  },
+  {
     title: "Belege",
     icon: Receipt,
     href: "/receipts",

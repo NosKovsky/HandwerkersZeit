@@ -32,6 +32,11 @@ const menuItems = [
     icon: Package,
   },
   {
+    title: "Bestand",
+    href: "/materials/inventory",
+    icon: Package,
+  },
+  {
     title: "Belege",
     href: "/receipts",
     icon: Receipt,
