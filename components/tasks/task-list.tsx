@@ -6,10 +6,13 @@ import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { getTasks, updateTaskStatus, deleteTask, type CommentTask } from "@/app/tasks/actions"
 import { Button } from "@/components/ui/button"
-import { Loader2, Trash2, ShoppingCart, Briefcase, ListChecks } from "lucide-react"
+import { Loader2, Trash2, ShoppingCart, Briefcase, ListChecks, Edit } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { TaskForm } from "./task-form"
 // TODO: Dialog für Bearbeiten
 
 export function TaskList() {
@@ -17,13 +20,17 @@ export function TaskList() {
   const [tasks, setTasks] = useState<CommentTask[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("")
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<CommentTask | null>(null)
   const { toast } = useToast()
 
   const fetchTasks = async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await getTasks() // TODO: Filter hinzufügen
+      const data = await getTasks({ status: statusFilter || undefined })
       setTasks(data)
     } catch (e) {
       setError("Fehler beim Laden der Aufgaben.")
@@ -34,7 +41,7 @@ export function TaskList() {
 
   useEffect(() => {
     if (user) fetchTasks()
-  }, [user])
+  }, [user, statusFilter])
 
   const handleStatusChange = async (taskId: string, newStatus: "NEU" | "OFFEN" | "ERLEDIGT") => {
     const originalTasks = [...tasks]
@@ -60,11 +67,30 @@ export function TaskList() {
     }
   }
 
+  const openEditForm = (task: CommentTask) => {
+    setSelectedTask(task)
+    setIsFormOpen(true)
+  }
+
+  const handleFormSuccess = () => {
+    setIsFormOpen(false)
+    setSelectedTask(null)
+    fetchTasks()
+  }
+
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     if (status === "ERLEDIGT") return "default" // Greenish in default theme
     if (status === "OFFEN") return "secondary" // Yellowish/Orangeish
     return "outline" // Neu
   }
+
+  const filteredTasks = tasks.filter(
+    (t) =>
+      (statusFilter ? t.status === statusFilter : true) &&
+      (t.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.projects?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())),
+  )
 
   if (isLoading) {
     return (
@@ -76,15 +102,34 @@ export function TaskList() {
   if (error) return <p className="text-red-500 p-4 bg-red-100 border border-red-500 rounded-md">{error}</p>
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Aufgaben & Kommentare</CardTitle>
         <CardDescription>Übersicht aller aktuellen Aufgaben und Kommentare.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* TODO: Filter hinzufügen */}
-        {tasks.length > 0 ? (
-          tasks.map((task) => (
+        <div className="flex flex-col sm:flex-row gap-2 items-center">
+          <Input
+            placeholder="Aufgaben durchsuchen..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="sm:max-w-xs"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Alle</SelectItem>
+              <SelectItem value="NEU">Neu</SelectItem>
+              <SelectItem value="OFFEN">Offen</SelectItem>
+              <SelectItem value="ERLEDIGT">Erledigt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {filteredTasks.length > 0 ? (
+          filteredTasks.map((task) => (
             <div key={task.id} className="p-3 border rounded-md bg-card hover:shadow-sm">
               <div className="flex justify-between items-start">
                 <div className="flex-grow">
@@ -128,7 +173,14 @@ export function TaskList() {
                       <SelectItem value="ERLEDIGT">Erledigt</SelectItem>
                     </SelectContent>
                   </Select>
-                  {/* <Button variant="outline" size="icon" className="h-8 w-8"> <Edit className="h-4 w-4" /> </Button> */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => openEditForm(task)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -147,5 +199,11 @@ export function TaskList() {
         )}
       </CardContent>
     </Card>
+    <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <TaskForm task={selectedTask} onSuccess={handleFormSuccess} />
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

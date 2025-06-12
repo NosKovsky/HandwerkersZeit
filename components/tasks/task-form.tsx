@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
-import { createTask } from "@/app/tasks/actions"
+import { createTask, updateTask, type CommentTask } from "@/app/tasks/actions"
 import { getProjects } from "@/app/projects/actions" // Für Projektauswahl
 // import { getEntriesLight } from "@/app/entries/actions"; // Für Eintragsauswahl (vereinfachte Version)
 import type { Database } from "@/lib/supabase/database.types"
@@ -31,12 +31,13 @@ const taskSchema = z.object({
 type TaskFormData = z.infer<typeof taskSchema>
 
 interface TaskFormProps {
+  task?: CommentTask | null
   defaultProjectId?: string | null
   defaultEntryId?: string | null
   onSuccess?: () => void
 }
 
-export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFormProps) {
+export function TaskForm({ task, defaultProjectId, defaultEntryId, onSuccess }: TaskFormProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [projects, setProjects] = useState<Project[]>([])
@@ -51,11 +52,11 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      content: "",
-      project_id: defaultProjectId || null,
-      entry_id: defaultEntryId || null,
-      status: "NEU",
-      is_procurement: false,
+      content: task?.content || "",
+      project_id: task?.project_id || defaultProjectId || null,
+      entry_id: task?.entry_id || defaultEntryId || null,
+      status: task?.status || "NEU",
+      is_procurement: task?.is_procurement || false,
     },
   })
 
@@ -67,13 +68,38 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
     loadData()
   }, [])
 
+  useEffect(() => {
+    if (task) {
+      reset({
+        content: task.content,
+        project_id: task.project_id || null,
+        entry_id: task.entry_id || null,
+        status: task.status,
+        is_procurement: task.is_procurement,
+      })
+    } else {
+      reset({
+        content: "",
+        project_id: defaultProjectId || null,
+        entry_id: defaultEntryId || null,
+        status: "NEU",
+        is_procurement: false,
+      })
+    }
+  }, [task, defaultProjectId, defaultEntryId, reset])
+
   // TODO: Lade Einträge, wenn sich Projekt ändert (für Eintragsauswahl)
 
   const onSubmit: SubmitHandler<TaskFormData> = async (data) => {
     setIsLoading(true)
-    const result = await createTask(data)
+    let result
+    if (task) {
+      result = await updateTask(task.id, data)
+    } else {
+      result = await createTask(data)
+    }
     if (result.success) {
-      toast({ title: "Erfolg", description: "Aufgabe/Kommentar erstellt." })
+      toast({ title: "Erfolg", description: `Aufgabe/Kommentar ${task ? "aktualisiert" : "erstellt"}.` })
       reset()
       if (onSuccess) onSuccess()
     } else {

@@ -117,3 +117,30 @@ export async function deleteTask(id: string): Promise<{ success: boolean; error?
   revalidatePath("/tasks")
   return { success: true }
 }
+
+export async function updateTask(
+  id: string,
+  taskData: Partial<
+    Pick<CommentTaskInsert, "content" | "project_id" | "entry_id" | "status" | "is_procurement" | "recipient_ids">
+  >,
+): Promise<{ success: boolean; error?: string | PostgrestError; task?: CommentTask }> {
+  const supabase = await createSupabaseServerActionClient()
+  const profile = await getUserProfile()
+  if (!profile) return { success: false, error: "Benutzer nicht authentifiziert." }
+
+  const { data, error } = await supabase
+    .from("comments")
+    .update({ ...taskData, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select("*, profiles!author_id(id, full_name, email), projects(id, name), entries(id, activity)")
+    .single()
+
+  if (error) {
+    console.error("Error updating task:", error)
+    return { success: false, error }
+  }
+  revalidatePath("/tasks")
+  if (taskData.entry_id) revalidatePath(`/entries/${taskData.entry_id}`)
+  if (taskData.project_id) revalidatePath(`/projects/${taskData.project_id}`)
+  return { success: true, task: data }
+}
