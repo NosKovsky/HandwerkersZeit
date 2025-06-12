@@ -27,6 +27,7 @@ export async function getTasks(filters?: {
   projectId?: string
   entryId?: string
   status?: string
+  search?: string
 }): Promise<CommentTask[]> {
   const supabase = await createSupabaseServerActionClient()
   const profile = await getUserProfile()
@@ -42,6 +43,7 @@ export async function getTasks(filters?: {
   if (filters?.projectId) query = query.eq("project_id", filters.projectId)
   if (filters?.entryId) query = query.eq("entry_id", filters.entryId)
   if (filters?.status) query = query.eq("status", filters.status)
+  if (filters?.search) query = query.ilike("content", `%${filters.search}%`)
 
   const { data, error } = await query
   if (error) {
@@ -97,6 +99,29 @@ export async function updateTaskStatus(
   if (error) {
     console.error("Error updating task status:", error)
     return { success: false, error: error }
+  }
+  revalidatePath("/tasks")
+  return { success: true, task: data }
+}
+
+export async function updateTask(
+  id: string,
+  taskData: { content: string; status: "NEU" | "OFFEN" | "ERLEDIGT" },
+): Promise<{ success: boolean; error?: string | PostgrestError; task?: CommentTask }> {
+  const supabase = await createSupabaseServerActionClient()
+  const profile = await getUserProfile()
+  if (!profile) return { success: false, error: "Benutzer nicht authentifiziert." }
+
+  const { data, error } = await supabase
+    .from("comments")
+    .update({ ...taskData, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select("*, profiles!author_id(id, full_name, email), projects(id, name), entries(id, activity)")
+    .single()
+
+  if (error) {
+    console.error("Error updating task:", error)
+    return { success: false, error }
   }
   revalidatePath("/tasks")
   return { success: true, task: data }
