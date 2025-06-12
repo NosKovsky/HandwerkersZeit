@@ -9,12 +9,12 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
 - **📊 Dashboard** - Übersichtliches Dashboard mit Statistiken und Schnellzugriff
 - **🎤 Sprachsteuerung** - KI-gestützte Sprachbefehle für Navigation und Eingaben
 - **⏰ Arbeitszeit-Tracking** - Ein-Klick Arbeitszeit beenden
+- **📝 Zeiterfassung** - Detaillierte Arbeitszeit- und Tätigkeitsdokumentation
 - **👥 Benutzerverwaltung** - Admin-Panel für Benutzer und Gruppen
 - **🌓 Dark/Light Mode** - Umschaltbare Themes
 - **📱 Responsive Design** - Optimiert für Desktop und Mobile
 
 ### 🚧 In Entwicklung
-- **📝 Zeiterfassung** - Detaillierte Arbeitszeit- und Tätigkeitsdokumentation
 - **🏗️ Baustellen-Management** - Verwaltung von Projekten und Baustellen
 - **📦 Materialverwaltung** - Erfassung und Verwaltung verwendeter Materialien
 - **🧾 Belegverwaltung** - Digitale Quittungs- und Rechnungsverwaltung
@@ -179,7 +179,7 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
 - **`customers`** - Kundendaten
 - **`comments`** - Aufgaben und Kommentare
 - **`invoices`** - Rechnungen (geplant)
-- **`time_entries`** - Detaillierte Zeiterfassung (geplant)
+- **`time_entries`** - Detaillierte Zeiterfassung (optional)
 
 ## 🔐 Authentifizierung & Sicherheit
 
@@ -287,7 +287,7 @@ Dieses Projekt steht unter der MIT Lizenz. Siehe [LICENSE](LICENSE) Datei für D
 - ✅ Basis-Dashboard
 - ✅ Benutzerauthentifizierung
 - ✅ Sprachsteuerung
-- 🚧 Vollständige Zeiterfassung
+- ✅ Vollständige Zeiterfassung
 - 🚧 Baustellen-Management
 - 🚧 Materialverwaltung
 

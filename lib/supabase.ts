@@ -99,6 +99,7 @@ export type Database = {
           project_id: string | null
           entry_date: string
           entry_time: string
+          end_time: string | null
           activity: string
           materials_used: any
           notes: string | null
@@ -111,6 +112,7 @@ export type Database = {
           project_id?: string | null
           entry_date: string
           entry_time: string
+          end_time?: string | null
           activity: string
           materials_used?: any
           notes?: string | null
@@ -123,6 +125,7 @@ export type Database = {
           project_id?: string | null
           entry_date?: string
           entry_time?: string
+          end_time?: string | null
           activity?: string
           materials_used?: any
           notes?: string | null
