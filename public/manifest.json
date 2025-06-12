@@ -1,7 +1,7 @@
 {
   "name": "HandwerksZeit",
   "short_name": "HandwerksZeit",
-  "description": "Baustellen Dokumentation App",
+  "description": "Baustellendokumentation App",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
