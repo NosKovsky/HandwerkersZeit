@@ -85,7 +85,24 @@ export async function updateTaskStatus(
   const profile = await getUserProfile() // Für Berechtigungsprüfung
   if (!profile) return { success: false, error: "Benutzer nicht authentifiziert." }
 
-  // TODO: Berechtigungsprüfung, ob der Benutzer den Status ändern darf (Autor, Empfänger, Admin)
+  // Berechtigungsprüfung
+  const { data: existingTask, error: fetchError } = await supabase
+    .from("comments")
+    .select("author_id, recipient_ids")
+    .eq("id", id)
+    .single()
+
+  if (fetchError || !existingTask) {
+    return { success: false, error: "Aufgabe nicht gefunden." }
+  }
+
+  const isAuthor = existingTask.author_id === profile.id
+  const isRecipient = existingTask.recipient_ids?.includes?.(profile.id) || false
+  const isAdmin = profile.role === "admin"
+
+  if (!isAuthor && !isRecipient && !isAdmin) {
+    return { success: false, error: "Keine Berechtigung, diese Aufgabe zu bearbeiten." }
+  }
 
   const { data, error } = await supabase
     .from("comments")
@@ -107,7 +124,24 @@ export async function deleteTask(id: string): Promise<{ success: boolean; error?
   const profile = await getUserProfile()
   if (!profile) return { success: false, error: "Benutzer nicht authentifiziert." }
 
-  // TODO: Berechtigungsprüfung (Autor oder Admin)
+  // Berechtigungsprüfung
+  const { data: existingTask, error: fetchError } = await supabase
+    .from("comments")
+    .select("author_id, recipient_ids")
+    .eq("id", id)
+    .single()
+
+  if (fetchError || !existingTask) {
+    return { success: false, error: "Aufgabe nicht gefunden." }
+  }
+
+  const isAuthor = existingTask.author_id === profile.id
+  const isRecipient = existingTask.recipient_ids?.includes?.(profile.id) || false
+  const isAdmin = profile.role === "admin"
+
+  if (!isAuthor && !isRecipient && !isAdmin) {
+    return { success: false, error: "Keine Berechtigung, diese Aufgabe zu bearbeiten." }
+  }
 
   const { error } = await supabase.from("comments").delete().eq("id", id)
   if (error) {
