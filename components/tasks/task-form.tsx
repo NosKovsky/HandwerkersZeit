@@ -13,7 +13,6 @@ import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
 import { createTask } from "@/app/tasks/actions"
 import { getProjects } from "@/app/projects/actions" // Für Projektauswahl
-// import { getEntriesLight } from "@/app/entries/actions"; // Für Eintragsauswahl (vereinfachte Version)
 import type { Database } from "@/lib/supabase/database.types"
 
 type Project = Database["public"]["Tables"]["projects"]["Row"]
@@ -40,13 +39,16 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [projects, setProjects] = useState<Project[]>([])
-  // const [entries, setEntries] = useState<EntryLight[]>([]); // Für Eintragsauswahl
+  const [entries, setEntries] = useState<{ id: string; activity: string; entry_date: string }[]>([])
+  const [entriesLoading, setEntriesLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
     control,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -59,15 +61,53 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
     },
   })
 
+  const projectId = watch("project_id")
+
+  useEffect(() => {
+    async function loadEntries() {
+      if (!projectId) {
+        setEntries([])
+        setValue("entry_id", null)
+        return
+      }
+      setEntriesLoading(true)
+      try {
+        const res = await fetch(`/api/entries-light?projectId=${projectId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setEntries(data)
+        } else {
+          setEntries([])
+        }
+      } catch (error) {
+        console.error("Error loading entries:", error)
+        setEntries([])
+      } finally {
+        setEntriesLoading(false)
+      }
+    }
+
+    loadEntries()
+  }, [projectId, setValue])
+
   useEffect(() => {
     async function loadData() {
       setProjects(await getProjects())
-      // if (defaultProjectId) setEntries(await getEntriesLight({ projectId: defaultProjectId }));
+      if (defaultProjectId) {
+        try {
+          const res = await fetch(`/api/entries-light?projectId=${defaultProjectId}`)
+          if (res.ok) {
+            const data = await res.json()
+            setEntries(data)
+          }
+        } catch (error) {
+          console.error("Error loading default entries:", error)
+        }
+      }
     }
     loadData()
   }, [])
 
-  // TODO: Lade Einträge, wenn sich Projekt ändert (für Eintragsauswahl)
 
   const onSubmit: SubmitHandler<TaskFormData> = async (data) => {
     setIsLoading(true)
@@ -138,7 +178,37 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
           />
         </div>
       </div>
-      {/* TODO: Eintragsauswahl, wenn Projekt gewählt */}
+      <div>
+        <Label htmlFor="entry_id">Eintrag (Optional)</Label>
+        <Controller
+          name="entry_id"
+          control={control}
+          render={({ field }) => (
+            <Select
+              onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+              value={field.value || "none"}
+              disabled={entriesLoading || !projectId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={projectId ? "Eintrag auswählen..." : "Erst Projekt wählen"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Kein Eintrag</SelectItem>
+                {entries.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {new Date(e.entry_date).toLocaleDateString("de-DE")} – {e.activity.substring(0, 30)}
+                  </SelectItem>
+                ))}
+                {projectId && !entriesLoading && entries.length === 0 && (
+                  <SelectItem value="none" disabled>
+                    Keine Einträge vorhanden
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
       <div className="flex items-center space-x-2">
         <Controller
           name="is_procurement"
