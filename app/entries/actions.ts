@@ -315,6 +315,55 @@ export async function getEntryById(id: string): Promise<{ entry: Entry | null; e
   }
 }
 
+export async function startWorkTime(
+  projectId: string,
+  startTime: string,
+  notes?: string,
+): Promise<{ success: boolean; error?: string; entry?: Entry }> {
+  try {
+    const supabase = await createSupabaseServerActionClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: "Nicht authentifiziert" }
+    }
+
+    const today = new Date().toISOString().split("T")[0]
+
+    const { data: newEntry, error: insertError } = await supabase
+      .from("entries")
+      .insert({
+        user_id: user.id,
+        project_id: projectId,
+        entry_date: today,
+        entry_time: startTime,
+        notes: notes || null,
+      })
+      .select(
+        `
+        *,
+        projects (id, name),
+        entry_images (id, image_path, file_name)
+      `,
+      )
+      .single()
+
+    if (insertError) {
+      console.error("Error starting work time:", insertError)
+      return { success: false, error: insertError.message }
+    }
+
+    revalidatePath("/entries")
+    revalidatePath("/dashboard")
+    return { success: true, entry: newEntry as Entry }
+  } catch (error) {
+    console.error("Unexpected error in startWorkTime:", error)
+    return { success: false, error: "Ein unerwarteter Fehler ist aufgetreten." }
+  }
+}
+
 // Hilfsfunktion für Arbeitszeit-Ende
 export async function endWorkTime(
   projectId: string,

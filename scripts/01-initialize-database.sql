@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS entries (
   project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
   entry_date DATE NOT NULL,
   entry_time TIME NOT NULL,
+  end_time TIME,
   activity TEXT NOT NULL,
   materials_used JSONB, -- [{ material_id: UUID, quantity: number, name: string, unit: string }]
   notes TEXT,
