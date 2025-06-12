@@ -13,11 +13,10 @@ import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
 import { createTask } from "@/app/tasks/actions"
 import { getProjects } from "@/app/projects/actions" // Für Projektauswahl
-// import { getEntriesLight } from "@/app/entries/actions"; // Für Eintragsauswahl (vereinfachte Version)
+import { getEntriesLight, type EntryLight } from "@/app/entries/actions" // Für Eintragsauswahl
 import type { Database } from "@/lib/supabase/database.types"
 
 type Project = Database["public"]["Tables"]["projects"]["Row"]
-// type EntryLight = { id: string; activity: string; entry_date: string }; // Vereinfachter Typ
 
 const taskSchema = z.object({
   content: z.string().min(3, "Aufgabe/Kommentar muss mindestens 3 Zeichen haben."),
@@ -40,13 +39,14 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [projects, setProjects] = useState<Project[]>([])
-  // const [entries, setEntries] = useState<EntryLight[]>([]); // Für Eintragsauswahl
+  const [entries, setEntries] = useState<EntryLight[]>([])
 
   const {
     register,
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -62,12 +62,26 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
   useEffect(() => {
     async function loadData() {
       setProjects(await getProjects())
-      // if (defaultProjectId) setEntries(await getEntriesLight({ projectId: defaultProjectId }));
+      if (defaultProjectId) {
+        setEntries(await getEntriesLight({ projectId: defaultProjectId }))
+      }
     }
     loadData()
-  }, [])
+  }, [defaultProjectId])
 
-  // TODO: Lade Einträge, wenn sich Projekt ändert (für Eintragsauswahl)
+  const selectedProjectId = watch("project_id")
+
+  useEffect(() => {
+    async function loadEntries() {
+      if (selectedProjectId) {
+        const data = await getEntriesLight({ projectId: selectedProjectId })
+        setEntries(data)
+      } else {
+        setEntries([])
+      }
+    }
+    loadEntries()
+  }, [selectedProjectId])
 
   const onSubmit: SubmitHandler<TaskFormData> = async (data) => {
     setIsLoading(true)
@@ -138,7 +152,34 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
           />
         </div>
       </div>
-      {/* TODO: Eintragsauswahl, wenn Projekt gewählt */}
+      {selectedProjectId && (
+        <div>
+          <Label htmlFor="entry_id">Eintrag (Optional)</Label>
+          <Controller
+            name="entry_id"
+            control={control}
+            render={({ field }) => (
+              <Select
+                onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+                value={field.value || "none"}
+                disabled={isLoading || entries.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={entries.length === 0 ? "Keine Einträge verfügbar" : "Eintrag auswählen..."} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Kein Eintrag</SelectItem>
+                  {entries.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {new Date(e.entry_date).toLocaleDateString("de-DE")} – {e.activity.substring(0, 30)}{e.activity.length > 30 ? "..." : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+      )}
       <div className="flex items-center space-x-2">
         <Controller
           name="is_procurement"

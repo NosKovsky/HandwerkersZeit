@@ -26,6 +26,43 @@ export type Entry = {
   }[]
 }
 
+export type EntryLight = Pick<Database["public"]["Tables"]["entries"]["Row"], "id" | "activity" | "entry_date">
+
+export async function getEntriesLight(filters?: { projectId?: string }): Promise<EntryLight[]> {
+  try {
+    const supabase = await createSupabaseServerActionClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return []
+    }
+
+    let query = supabase
+      .from("entries")
+      .select("id, activity, entry_date")
+      .eq("user_id", user.id)
+      .order("entry_date", { ascending: false })
+
+    if (filters?.projectId) {
+      query = query.eq("project_id", filters.projectId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error("Error fetching light entries:", error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error("Unexpected error in getEntriesLight:", error)
+    return []
+  }
+}
+
 export async function getEntries(
   userId: string,
   projectId?: string,
