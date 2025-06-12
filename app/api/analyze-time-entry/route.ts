@@ -7,8 +7,10 @@ const openai = new OpenAI({
 })
 
 export async function POST(request: NextRequest) {
+  let transcript = ""
   try {
-    const { transcript } = await request.json()
+    const body = await request.json()
+    transcript = body.transcript
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({
@@ -64,10 +66,9 @@ Antworte im JSON-Format:
     return NextResponse.json(result)
   } catch (error) {
     console.error("OpenAI Time Entry Error:", error)
-    const transcript = "Error processing transcript" // Declare transcript variable here
     return NextResponse.json({
       activity: "Allgemeine Arbeiten",
-      notes: transcript,
+      notes: transcript || "Error processing transcript",
       confidence: 0.5,
     } as TimeEntryCommand)
   }
