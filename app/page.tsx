@@ -301,8 +301,8 @@ export default function HomePage() {
                 ))}
               </div>
               <blockquote className="text-2xl italic text-slate-800 mb-6 leading-relaxed font-medium">
-                "HandwerksZeit hat unsere Baustellendokumentation revolutioniert! Einfach sprechen und alles wird
-                automatisch erfasst - spart uns täglich Stunden!"
+                &quot;HandwerksZeit hat unsere Baustellendokumentation revolutioniert! Einfach sprechen und alles wird
+                automatisch erfasst - spart uns täglich Stunden!&quot;
               </blockquote>
               <div className="flex items-center justify-center gap-4">
                 <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-blue-500 rounded-full flex items-center justify-center">

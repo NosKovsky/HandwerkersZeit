@@ -519,20 +519,20 @@ export function UltimateSpeechEntry({ onEntryCreated }: UltimateSpeechEntryProps
           </h3>
           <div className="bg-white p-6 rounded-2xl border-2 border-blue-200">
             <p className="text-lg text-gray-700 italic leading-relaxed">
-              "Heute gearbeitet von 7.00 bis jetzt bei Herrn Schulze in der Schulze-Delitzsch-Straße in Herford. Wir
+              &quot;Heute gearbeitet von 7.00 bis jetzt bei Herrn Schulze in der Schulze-Delitzsch-Straße in Herford. Wir
               haben dort Reparatur einer Dachrinne gemacht. Dafür haben wir gebraucht: 1 Stück 6-teilige Rinne 3 Meter,
               4 Rinneisen 6-teilig, Lötmaterial. Es ist noch zu besorgen: 1 Einhangstutzen und 4 Rinneisen müssen beim
-              Händler geholt werden."
+              Händler geholt werden.&quot;
             </p>
           </div>
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
             <div className="space-y-2">
               <p className="font-semibold text-blue-600">🎯 Die KI erkennt automatisch:</p>
               <ul className="space-y-1 ml-4">
-                <li>• Kunde: "Herr Schulze"</li>
+                <li>• Kunde: &quot;Herr Schulze&quot;</li>
                 <li>• Adresse mit PLZ-Ermittlung</li>
-                <li>• Arbeitszeiten: "von 7.00 bis jetzt"</li>
-                <li>• Tätigkeit: "Reparatur einer Dachrinne"</li>
+                <li>• Arbeitszeiten: &quot;von 7.00 bis jetzt&quot;</li>
+                <li>• Tätigkeit: &quot;Reparatur einer Dachrinne&quot;</li>
               </ul>
             </div>
             <div className="space-y-2">

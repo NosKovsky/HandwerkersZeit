@@ -377,17 +377,17 @@ export function SpeechToTextEntry({ onEntryCreated }: SpeechToTextEntryProps) {
               </li>
               <li className="flex items-start gap-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span>Erwähnen Sie Materialien mit Mengen: "20 Ziegel", "5 Meter Dachrinne"</span>
+                <span>Erwähnen Sie Materialien mit Mengen: &quot;20 Ziegel&quot;, &quot;5 Meter Dachrinne&quot;</span>
               </li>
             </ul>
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-start gap-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span>Beschreiben Sie die Tätigkeit: "Dach repariert", "Isolierung angebracht"</span>
+                <span>Beschreiben Sie die Tätigkeit: &quot;Dach repariert&quot;, &quot;Isolierung angebracht&quot;</span>
               </li>
               <li className="flex items-start gap-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span>Nennen Sie die Arbeitszeit: "3 Stunden gearbeitet"</span>
+                <span>Nennen Sie die Arbeitszeit: &quot;3 Stunden gearbeitet&quot;</span>
               </li>
             </ul>
           </div>

@@ -198,7 +198,7 @@ export function ProjectListAdminView() {
           <DialogHeader>
             <DialogTitle>Baustelle Löschen Bestätigen</DialogTitle>
             <DialogDescription>
-              Sind Sie sicher, dass Sie die Baustelle "{projectToDelete?.name}" endgültig löschen möchten? Diese Aktion
+              Sind Sie sicher, dass Sie die Baustelle &quot;{projectToDelete?.name}&quot; endgültig löschen möchten? Diese Aktion
               kann nicht rückgängig gemacht werden.
             </DialogDescription>
           </DialogHeader>

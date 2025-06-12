@@ -129,18 +129,18 @@ export function EntryList({ entries, onDelete, onEdit }: EntryListProps) {
                   <Button variant="outline" size="sm" onClick={() => onEdit(entry)}>
                     <Edit
                       className="w-4 h-4 mr-1"
-                      aria-label={`Eintrag "${entry.task_description.substring(0, 20)}..." bearbeiten`}
+                      aria-label={`Eintrag &quot;${entry.task_description.substring(0, 20)}...&quot; bearbeiten`}
                     />
-                    <span className="sr-only">Eintrag "{entry.task_description.substring(0, 20)}..." </span>Bearbeiten
+                    <span className="sr-only">Eintrag &quot;{entry.task_description.substring(0, 20)}...&quot; </span>Bearbeiten
                   </Button>
                 )}
                 {onDelete && (
                   <Button variant="outline" size="sm" onClick={() => onDelete(entry.id)}>
                     <Trash2
                       className="w-4 h-4 mr-1"
-                      aria-label={`Eintrag "${entry.task_description.substring(0, 20)}..." löschen`}
+                      aria-label={`Eintrag &quot;${entry.task_description.substring(0, 20)}...&quot; löschen`}
                     />
-                    <span className="sr-only">Eintrag "{entry.task_description.substring(0, 20)}..." </span>Löschen
+                    <span className="sr-only">Eintrag &quot;{entry.task_description.substring(0, 20)}...&quot; </span>Löschen
                   </Button>
                 )}
               </div>

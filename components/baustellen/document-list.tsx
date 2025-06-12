@@ -168,7 +168,7 @@ export function DocumentList({ projectId }: DocumentListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Dokument löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Sind Sie sicher, dass Sie das Dokument "{documentToDelete?.name}" löschen möchten? Diese Aktion kann nicht
+              Sind Sie sicher, dass Sie das Dokument &quot;{documentToDelete?.name}&quot; löschen möchten? Diese Aktion kann nicht
               rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>

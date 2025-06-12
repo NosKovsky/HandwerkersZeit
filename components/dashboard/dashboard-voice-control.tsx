@@ -150,7 +150,7 @@ export function DashboardVoiceControl() {
 
       <div className="text-center">
         <p className="text-xs text-muted-foreground">
-          Beispiele: "Erstelle neue Baustelle", "Füge Arbeitszeit hinzu", "Erstelle Aufgabe"
+          Beispiele: &quot;Erstelle neue Baustelle&quot;, &quot;Füge Arbeitszeit hinzu&quot;, &quot;Erstelle Aufgabe&quot;
         </p>
       </div>
     </div>

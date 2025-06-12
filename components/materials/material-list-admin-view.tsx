@@ -186,7 +186,7 @@ export function MaterialListAdminView() {
           <DialogHeader>
             <DialogTitle>Material Löschen Bestätigen</DialogTitle>
             <DialogDescription>
-              Sind Sie sicher, dass Sie das Material "{materialToDelete?.name}" endgültig löschen möchten?
+              Sind Sie sicher, dass Sie das Material &quot;{materialToDelete?.name}&quot; endgültig löschen möchten?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -208,21 +208,21 @@ export function SimpleVoiceNotes({ onNotesUpdate, currentNotes = "" }: SimpleVoi
                 <div className="p-3 bg-white rounded border-l-4 border-blue-500">
                   <p className="font-medium text-blue-800">Arbeiten beschreiben:</p>
                   <p className="text-gray-700 italic">
-                    "Heute Dachrinne repariert, 2 Meter Rinne ausgetauscht und Fallrohr neu montiert"
+                    &quot;Heute Dachrinne repariert, 2 Meter Rinne ausgetauscht und Fallrohr neu montiert&quot;
                   </p>
                 </div>
 
                 <div className="p-3 bg-white rounded border-l-4 border-green-500">
                   <p className="font-medium text-green-800">Materialien erwähnen:</p>
                   <p className="text-gray-700 italic">
-                    "Verwendet: 1 Rinne 6-teilig, 4 Rinneisen, Lötmaterial und 2 Meter Fallrohr"
+                    &quot;Verwendet: 1 Rinne 6-teilig, 4 Rinneisen, Lötmaterial und 2 Meter Fallrohr&quot;
                   </p>
                 </div>
 
                 <div className="p-3 bg-white rounded border-l-4 border-orange-500">
                   <p className="font-medium text-orange-800">Probleme dokumentieren:</p>
                   <p className="text-gray-700 italic">
-                    "Problem mit alter Befestigung gefunden, muss nächste Woche neue Halterungen besorgen"
+                    &quot;Problem mit alter Befestigung gefunden, muss nächste Woche neue Halterungen besorgen&quot;
                   </p>
                 </div>
               </div>
