@@ -1,5 +1,5 @@
 import { MainLayout } from "@/components/layout/main-layout"
-import { getBaustellen } from "./actions"
+import { getBaustellen, createBaustelle, updateBaustelle, deleteBaustelle } from "./actions"
 import BaustellenListAdminView from "@/components/baustellen/baustelle-list-admin-view"
 
 export default async function BaustellenPage() {
@@ -12,18 +12,9 @@ export default async function BaustellenPage() {
         <div className="container mx-auto py-8">
           <BaustellenListAdminView
             baustellen={baustellen}
-            onDelete={async (id: string) => {
-              "use server"
-              // Delete logic here
-            }}
-            onUpdate={async (id: string, data: any) => {
-              "use server"
-              // Update logic here
-            }}
-            onCreate={async (data: any) => {
-              "use server"
-              // Create logic here
-            }}
+            onDelete={deleteBaustelle}
+            onUpdate={updateBaustelle}
+            onCreate={createBaustelle}
           />
         </div>
       </MainLayout>

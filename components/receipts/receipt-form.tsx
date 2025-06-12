@@ -21,7 +21,13 @@ import type { Database } from "@/lib/supabase/database.types"
 
 type Project = Database["public"]["Tables"]["projects"]["Row"]
 
-const receiptCategories = ["Tankquittung", "Material Barzahlung", "Werkzeug", "Verpflegung", "Sonstiges"]
+export const receiptCategories = [
+  "Tankquittung",
+  "Material Barzahlung",
+  "Werkzeug",
+  "Verpflegung",
+  "Sonstiges",
+]
 
 const receiptSchema = z.object({
   receipt_date: z.string().min(1, "Datum ist erforderlich."),

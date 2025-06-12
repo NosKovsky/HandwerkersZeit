@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BaustelleForm } from "@/components/baustellen/baustelle-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -124,7 +126,29 @@ function BaustellenListAdminView({ baustellen = [], onDelete, onUpdate, onCreate
         </div>
       )}
 
-      {/* Dialoge für Create/Edit würden hier implementiert werden */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Neue Baustelle</DialogTitle>
+          </DialogHeader>
+          <BaustelleForm onSuccess={() => setIsCreateDialogOpen(false)} onSubmit={handleCreate} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Baustelle bearbeiten</DialogTitle>
+          </DialogHeader>
+          {editingBaustelle && (
+            <BaustelleForm
+              baustelle={editingBaustelle}
+              onSuccess={() => setIsEditDialogOpen(false)}
+              onSubmit={handleUpdate}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

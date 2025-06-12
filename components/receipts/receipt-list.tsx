@@ -15,9 +15,18 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog"
-import { ReceiptForm } from "./receipt-form"
+import { ReceiptForm, receiptCategories } from "./receipt-form"
 import { useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import type { DateRange } from "react-day-picker"
 import { useAuth } from "@/contexts/auth-context"
 import { Badge } from "@/components/ui/badge"
 
@@ -27,6 +36,8 @@ export function ReceiptList() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState<string>("")
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null)
   const [receiptToDelete, setReceiptToDelete] = useState<Receipt | null>(null)
@@ -38,7 +49,9 @@ export function ReceiptList() {
     setError(null)
     try {
       const data = await getReceipts({
-        /* TODO: Filter hier einbauen */
+        category: categoryFilter || undefined,
+        dateFrom: dateRange?.from?.toISOString(),
+        dateTo: dateRange?.to?.toISOString(),
       })
       setReceipts(data)
     } catch (e) {
@@ -50,7 +63,7 @@ export function ReceiptList() {
 
   useEffect(() => {
     if (user) fetchReceipts()
-  }, [user])
+  }, [user, categoryFilter, dateRange])
 
   const handleFormSuccess = () => {
     setIsFormOpen(false)
@@ -113,7 +126,24 @@ export function ReceiptList() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
-        {/* TODO: Weitere Filter (Datum, Kategorie, Projekt) */}
+        <Select
+          value={categoryFilter}
+          onValueChange={setCategoryFilter}
+          defaultValue=""
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Kategorie" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Alle</SelectItem>
+            {receiptCategories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
       </div>
 
       {isLoading && (

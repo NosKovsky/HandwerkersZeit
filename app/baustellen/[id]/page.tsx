@@ -12,6 +12,7 @@ import { ProjectTodoList } from "@/components/todos/project-todo-list"
 import { ExportDialog } from "@/components/baustellen/export-dialog"
 import { GoogleMapsServer } from "@/components/google-maps-server"
 import { getGoogleMapsSearchUrl, hasGoogleMapsApiKey } from "@/lib/google-maps-server"
+import { DocumentList } from "@/components/baustellen/document-list"
 
 type BaustellePageProps = {
   params: { id: string }
@@ -227,6 +228,10 @@ export default async function BaustelleDetailPage({ params }: BaustellePageProps
           </div>
         </div>
       )}
+
+      <div className="mt-8">
+        <DocumentList projectId={baustelleId} />
+      </div>
 
       {/* Detaillierte Einträge */}
       <div className="mt-10">
