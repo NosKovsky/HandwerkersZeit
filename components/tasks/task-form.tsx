@@ -67,7 +67,7 @@ export function TaskForm({ defaultProjectId, defaultEntryId, onSuccess }: TaskFo
     loadData()
   }, [])
 
-  // TODO: Lade Einträge, wenn sich Projekt ändert (für Eintragsauswahl)
+  // TODO: Einträge laden, wenn sich das Projekt ändert (zukünftige Erweiterung)
 
   const onSubmit: SubmitHandler<TaskFormData> = async (data) => {
     setIsLoading(true)
