@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createSupabaseServerActionClient } from "@/lib/supabase/supabase-server"
+import { uploadFile, deleteFile, STORAGE_BUCKETS } from "@/lib/supabase/storage"
 
 export type Entry = {
   id: string
@@ -135,9 +136,47 @@ export async function createEntry(
       return { success: false, error: `Fehler beim Erstellen: ${entryError.message}` }
     }
 
+    let imageError: string | null = null
+
+    if (imageFiles && imageFiles.length > 0) {
+      for (const file of imageFiles) {
+        const uploadResult = await uploadFile(
+          STORAGE_BUCKETS.ENTRY_IMAGES,
+          file,
+          user.id,
+          "entries",
+        )
+
+        if (uploadResult.success && uploadResult.path) {
+          const { error: imgInsertError } = await supabase
+            .from("entry_images")
+            .insert({
+              entry_id: newEntry.id,
+              user_id: user.id,
+              image_path: uploadResult.path,
+              file_name: uploadResult.fileName || file.name,
+            })
+
+          if (imgInsertError) {
+            await deleteFile(STORAGE_BUCKETS.ENTRY_IMAGES, uploadResult.path)
+            console.error("Error saving entry image:", imgInsertError)
+            imageError =
+              imageError ||
+              `Fehler beim Speichern eines Bildes: ${imgInsertError.message}`
+          }
+        } else {
+          imageError = imageError || uploadResult.error || "Bild-Upload fehlgeschlagen"
+        }
+      }
+    }
+
     // Cache invalidieren
     revalidatePath("/entries")
     revalidatePath("/dashboard")
+
+    if (imageError) {
+      return { success: false, error: imageError }
+    }
 
     return { success: true, entry: newEntry }
   } catch (error) {
@@ -208,6 +247,20 @@ export async function updateEntry(
 
     // Gelöschte Bilder entfernen
     if (deletedImageIds && deletedImageIds.length > 0) {
+      const { data: imagesToDelete } = await supabase
+        .from("entry_images")
+        .select("id, image_path")
+        .in("id", deletedImageIds)
+        .eq("entry_id", entryId)
+
+      if (imagesToDelete) {
+        for (const img of imagesToDelete) {
+          if (img.image_path) {
+            await deleteFile(STORAGE_BUCKETS.ENTRY_IMAGES, img.image_path)
+          }
+        }
+      }
+
       const { error: deleteImagesError } = await supabase
         .from("entry_images")
         .delete()
@@ -219,18 +272,47 @@ export async function updateEntry(
       }
     }
 
-    // Neue Bilder hinzufügen (falls implementiert)
+    // Neue Bilder hinzufügen
     if (newImageFiles && newImageFiles.length > 0) {
-      // TODO: Implementierung für Bild-Upload
-      console.log("New image files to upload:", newImageFiles.length)
+      for (const file of newImageFiles) {
+        const uploadResult = await uploadFile(
+          STORAGE_BUCKETS.ENTRY_IMAGES,
+          file,
+          user.id,
+          "entries",
+        )
+
+        if (uploadResult.success && uploadResult.path) {
+          const { error: imgInsertError } = await supabase
+            .from("entry_images")
+            .insert({
+              entry_id: entryId,
+              user_id: user.id,
+              image_path: uploadResult.path,
+              file_name: uploadResult.fileName || file.name,
+            })
+
+          if (imgInsertError) {
+            await deleteFile(STORAGE_BUCKETS.ENTRY_IMAGES, uploadResult.path)
+            console.error("Error saving entry image:", imgInsertError)
+          }
+        } else {
+          console.error(
+            "Error uploading new image:",
+            uploadResult.error || "unknown",
+          )
+        }
+      }
     }
+
+    const { entry: finalEntry } = await getEntryById(entryId)
 
     // Cache invalidieren
     revalidatePath("/entries")
     revalidatePath("/dashboard")
     revalidatePath(`/entries/${entryId}`)
 
-    return { success: true, entry: updatedEntry }
+    return { success: true, entry: finalEntry || updatedEntry }
   } catch (error) {
     console.error("Unexpected error in updateEntry:", error)
     return { success: false, error: "Ein unerwarteter Fehler ist aufgetreten." }
