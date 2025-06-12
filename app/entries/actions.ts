@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createSupabaseServerActionClient } from "@/lib/supabase/supabase-server"
+import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase/storage"
 
 export type Entry = {
   id: string
@@ -176,7 +177,9 @@ export async function updateEntry(
     }
 
     // Eintrag aktualisieren
-    const { data: updatedEntry, error: updateError } = await supabase
+    let updatedEntry
+    let updateError
+    ;({ data: updatedEntry, error: updateError } = await supabase
       .from("entries")
       .update(entryData)
       .eq("id", entryId)
@@ -195,7 +198,7 @@ export async function updateEntry(
         )
       `,
       )
-      .single()
+      .single())
 
     if (updateError) {
       console.error("Error updating entry:", updateError)
@@ -219,10 +222,55 @@ export async function updateEntry(
       }
     }
 
-    // Neue Bilder hinzufügen (falls implementiert)
+    // Neue Bilder hinzufügen
     if (newImageFiles && newImageFiles.length > 0) {
-      // TODO: Implementierung für Bild-Upload
-      console.log("New image files to upload:", newImageFiles.length)
+      for (const imageFile of newImageFiles) {
+        const uploadResult = await uploadFile(
+          STORAGE_BUCKETS.ENTRY_IMAGES,
+          imageFile,
+          user.id,
+          "entries",
+        )
+
+        if (uploadResult.success && uploadResult.path) {
+          await supabase.from("entry_images").insert({
+            entry_id: entryId,
+            user_id: user.id,
+            image_path: uploadResult.path,
+            file_name: uploadResult.fileName,
+          })
+        } else {
+          console.error(
+            "Error uploading entry image:",
+            uploadResult.error,
+          )
+        }
+      }
+
+      // Eintrag nach dem Upload neu laden, um die Bilder mitzuschicken
+      const { data: refreshedEntry } = await supabase
+        .from("entries")
+        .select(
+          `
+          *,
+          projects (
+            id,
+            name
+          ),
+          entry_images (
+            id,
+            image_path,
+            file_name
+          )
+        `,
+        )
+        .eq("id", entryId)
+        .eq("user_id", user.id)
+        .single()
+
+      if (refreshedEntry) {
+        updatedEntry = refreshedEntry
+      }
     }
 
     // Cache invalidieren
