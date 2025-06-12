@@ -59,11 +59,60 @@ export async function POST(request: NextRequest) {
       notes: `Transkript: ${transcript}`,
     }
 
-    // TODO: Logik zum Abgleichen von project_name_guess mit existierenden Projekten
-    // TODO: Logik zum Abgleichen von materials_guess mit existierenden Materialien und Erstellen von materials_used JSON
+    // Projekt-Abgleich
+    let matchedProject: { id: string; name: string } | null = null
+    if (extractedData.project_name_guess) {
+      const { data: project } = await supabase
+        .from("projects")
+        .select("id, name")
+        .ilike("name", `%${extractedData.project_name_guess}%`)
+        .limit(1)
+        .single()
 
-    // Fürs Erste geben wir die extrahierten Daten zurück
-    return NextResponse.json({ success: true, transcript, extractedData })
+      if (project) {
+        matchedProject = project
+      }
+    }
+
+    // Material-Abgleich
+    const materialsUsed: any[] = []
+    if (Array.isArray(extractedData.materials_guess)) {
+      for (const item of extractedData.materials_guess) {
+        const { data: material } = await supabase
+          .from("materials")
+          .select("id, name, unit")
+          .ilike("name", `%${item.name}%`)
+          .limit(1)
+          .single()
+
+        if (material) {
+          materialsUsed.push({
+            material_id: material.id,
+            name: material.name,
+            quantity: item.quantity,
+            unit: material.unit || item.unit,
+          })
+        } else {
+          materialsUsed.push(item)
+        }
+      }
+    }
+
+    const responseData = {
+      entry_date: extractedData.entry_date,
+      entry_time: extractedData.entry_time,
+      project_id: matchedProject?.id || null,
+      activity: extractedData.activity,
+      materials_used: materialsUsed,
+      notes: extractedData.notes,
+    }
+
+    return NextResponse.json({
+      success: true,
+      transcript,
+      entryData: responseData,
+      matchedProject,
+    })
   } catch (error) {
     console.error("Error in speech-to-entry API:", error)
     const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler"
