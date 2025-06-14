@@ -122,7 +122,12 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
    - `receiptimages` (public) - Für Belege
    - `documents` (public) - Für Dokumente
 
-6. **Entwicklungsserver starten**
+6. **TypeScript Typen prüfen**
+\`\`\`bash
+npm run type-check
+\`\`\`
+
+7. **Entwicklungsserver starten**
    \`\`\`bash
    npm run dev
    # oder
