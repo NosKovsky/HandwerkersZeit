@@ -13,9 +13,9 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
 - **👥 Benutzerverwaltung** - Admin-Panel für Benutzer und Gruppen
 - **🌓 Dark/Light Mode** - Umschaltbare Themes
 - **📱 Responsive Design** - Optimiert für Desktop und Mobile
+- **🏗️ Baustellen-Management** - Verwaltung von Projekten und Baustellen
 
 ### 🚧 In Entwicklung
-- **🏗️ Baustellen-Management** - Verwaltung von Projekten und Baustellen
 - **📦 Materialverwaltung** - Erfassung und Verwaltung verwendeter Materialien
 - **🧾 Belegverwaltung** - Digitale Quittungs- und Rechnungsverwaltung
 - **👥 Kundenverwaltung** - Zentrale Kundendatenbank
@@ -29,7 +29,7 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
 - **🖼️ Galerie** - Zentrale Bildübersicht
 - **📱 PWA** - Progressive Web App Funktionalität
 - **🔄 Offline-Modus** - Arbeiten ohne Internetverbindung
-- **📤 Export-Funktionen** - PDF, Excel Export
+- **📤 Export-Funktionen** - CSV-Export verfügbar, PDF/Excel geplant
 - **🔔 Push-Benachrichtigungen** - Echtzeit-Updates
 
 ## 🛠️ Tech Stack
@@ -288,7 +288,7 @@ Dieses Projekt steht unter der MIT Lizenz. Siehe [LICENSE](LICENSE) Datei für D
 - ✅ Benutzerauthentifizierung
 - ✅ Sprachsteuerung
 - ✅ Vollständige Zeiterfassung
-- 🚧 Baustellen-Management
+- ✅ Baustellen-Management
 - 🚧 Materialverwaltung
 
 ### Version 1.1 (Q2 2024)
@@ -299,7 +299,7 @@ Dieses Projekt steht unter der MIT Lizenz. Siehe [LICENSE](LICENSE) Datei für D
 
 ### Version 1.2 (Q3 2024)
 - 📋 Rechnungsstellung
-- 📋 Export-Funktionen
+- 📋 Export-Funktionen (PDF/Excel)
 - 📋 Team-Kollaboration
 - 📋 API für Drittanbieter
 

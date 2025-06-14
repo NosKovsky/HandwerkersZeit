@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Home, Clock, Building, Package, Receipt, Users, Settings, Menu, X, Calendar, BarChart3 } from "lucide-react"
+import { Home, Clock, Building, Package, Receipt, Users, Settings, Menu, X, Calendar, BarChart3, FileDown } from "lucide-react"
 import { useMobile } from "@/hooks/use-mobile"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -25,6 +25,11 @@ const menuItems = [
     title: "Baustellen",
     href: "/baustellen",
     icon: Building,
+  },
+  {
+    title: "Export",
+    href: "/baustellen/export",
+    icon: FileDown,
   },
   {
     title: "Materialien",

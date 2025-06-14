@@ -18,6 +18,7 @@ import {
   Settings,
   Calendar,
   BarChart3,
+  FileDown,
   Euro,
   LogOut,
 } from "lucide-react"
@@ -39,6 +40,12 @@ const menuItems = [
     title: "Baustellen",
     icon: Building,
     href: "/baustellen",
+    badge: null,
+  },
+  {
+    title: "Export",
+    icon: FileDown,
+    href: "/baustellen/export",
     badge: null,
   },
   {

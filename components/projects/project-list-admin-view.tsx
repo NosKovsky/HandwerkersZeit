@@ -3,7 +3,12 @@
 import { Card } from "@/components/ui/card"
 
 import { useState, useEffect } from "react"
-import { getProjects, deleteProject } from "@/app/projects/actions"
+import {
+  getProjects,
+  deleteProject,
+  createProject,
+  updateProject,
+} from "@/app/projects/actions"
 import type { Database } from "@/lib/supabase/database.types"
 import { Button } from "@/components/ui/button"
 import { PlusCircle, Edit, Trash2, Search, Loader2 } from "lucide-react"
@@ -58,6 +63,41 @@ export function ProjectListAdminView() {
     setIsFormOpen(false)
     setSelectedProject(null)
     fetchProjects() // Daten neu laden
+  }
+
+  const handleFormSubmit = async (
+    data: Pick<Project, "name" | "address" | "description">,
+    isUpdate?: boolean,
+  ) => {
+    setIsLoading(true)
+    try {
+      const result = isUpdate && selectedProject
+        ? await updateProject(selectedProject.id, data)
+        : await createProject(data)
+
+      if (result.success) {
+        toast({
+          title: "Erfolg",
+          description: `Projekt wurde ${isUpdate ? "aktualisiert" : "erstellt"}.`,
+        })
+        handleFormSuccess()
+      } else {
+        toast({
+          title: "Fehler",
+          description: result.error || "Aktion fehlgeschlagen",
+          variant: "destructive",
+        })
+      }
+    } catch (e) {
+      console.error(e)
+      toast({
+        title: "Fehler",
+        description: "Aktion fehlgeschlagen",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const openEditForm = (project: Project) => {
@@ -188,7 +228,11 @@ export function ProjectListAdminView() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>{/* Titel wird in ProjectForm gesetzt */}</DialogHeader>
-          <ProjectForm project={selectedProject} onSuccess={handleFormSuccess} />
+          <ProjectForm
+            project={selectedProject}
+            onSuccess={handleFormSuccess}
+            onSubmit={handleFormSubmit}
+          />
         </DialogContent>
       </Dialog>
 
