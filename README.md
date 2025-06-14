@@ -144,7 +144,31 @@ npm run type-check
    yarn dev
    \`\`\`
 
-   Die Anwendung ist unter [http://localhost:3000](http://localhost:3000) verfügbar.
+  Die Anwendung ist unter [http://localhost:3000](http://localhost:3000) verfügbar.
+
+## 🛠️ Entwicklungsumgebung einrichten
+
+Damit Tests und Linting reibungslos funktionieren, müssen nach der Installation
+alle Abhängigkeiten und die Playwright-Browser eingerichtet werden.
+
+1. **Pakete installieren**
+
+   Falls noch nicht geschehen, installiere zunächst alle npm-Pakete (inklusive
+   `next`):
+
+   ```bash
+   npm install
+   ```
+
+2. **Playwright-Browser installieren**
+
+   Richte anschließend die von Playwright benötigten Browser ein:
+
+   ```bash
+   npx playwright install
+   ```
+
+Ohne diese Schritte schlagen `npm test` und `npm run lint` fehl.
 
 ## 📁 Projektstruktur
 
