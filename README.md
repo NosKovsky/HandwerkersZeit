@@ -32,6 +32,16 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
 - **📤 Export-Funktionen** - PDF, Excel Export
 - **🔔 Push-Benachrichtigungen** - Echtzeit-Updates
 
+## 📤 Datenexport
+
+Der Export befindet sich unter [`/baustellen/export`](./baustellen/export). Im Dialog können Sie folgende Optionen wählen:
+
+1. **Zeitraum** – Standardmäßig werden alle Daten exportiert. Mit "Bestimmten Zeitraum auswählen" legen Sie Start- und Enddatum fest.
+2. **Inhalte** – Wählen Sie, ob Zeiteinträge, Materialien, Aufgaben und (bald) Bilder in die Datei aufgenommen werden.
+3. **Format** – Aktuell wird CSV unterstützt, Excel und PDF sind geplant.
+
+Nach Klick auf **Exportieren** erstellt die Anwendung die Datei und startet automatisch den Download. Der Dateiname enthält den Projektnamen und das Datum.
+
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 14, React 18, TypeScript
