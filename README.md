@@ -32,6 +32,16 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
 - **📤 Export-Funktionen** - CSV-Export verfügbar, PDF/Excel geplant
 - **🔔 Push-Benachrichtigungen** - Echtzeit-Updates
 
+## 📤 Datenexport
+
+Der Export befindet sich unter [`/baustellen/export`](./baustellen/export). Im Dialog können Sie folgende Optionen wählen:
+
+1. **Zeitraum** – Standardmäßig werden alle Daten exportiert. Mit "Bestimmten Zeitraum auswählen" legen Sie Start- und Enddatum fest.
+2. **Inhalte** – Wählen Sie, ob Zeiteinträge, Materialien, Aufgaben und (bald) Bilder in die Datei aufgenommen werden.
+3. **Format** – Aktuell wird CSV unterstützt, Excel und PDF sind geplant.
+
+Nach Klick auf **Exportieren** erstellt die Anwendung die Datei und startet automatisch den Download. Der Dateiname enthält den Projektnamen und das Datum.
+
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 14, React 18, TypeScript
@@ -124,14 +134,43 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
    - `receiptimages` (public) - Für Belege
    - `documents` (public) - Für Dokumente
 
-6. **Entwicklungsserver starten**
+6. **TypeScript Typen prüfen**
+\`\`\`bash
+npm run type-check
+\`\`\`
+
+7. **Entwicklungsserver starten**
    \`\`\`bash
    npm run dev
    # oder
    yarn dev
    \`\`\`
 
-   Die Anwendung ist unter [http://localhost:3000](http://localhost:3000) verfügbar.
+  Die Anwendung ist unter [http://localhost:3000](http://localhost:3000) verfügbar.
+
+## 🛠️ Entwicklungsumgebung einrichten
+
+Damit Tests und Linting reibungslos funktionieren, müssen nach der Installation
+alle Abhängigkeiten und die Playwright-Browser eingerichtet werden.
+
+1. **Pakete installieren**
+
+   Falls noch nicht geschehen, installiere zunächst alle npm-Pakete (inklusive
+   `next`):
+
+   ```bash
+   npm install
+   ```
+
+2. **Playwright-Browser installieren**
+
+   Richte anschließend die von Playwright benötigten Browser ein:
+
+   ```bash
+   npx playwright install
+   ```
+
+Ohne diese Schritte schlagen `npm test` und `npm run lint` fehl.
 
 ## 📁 Projektstruktur
 
