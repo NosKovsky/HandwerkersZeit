@@ -2,7 +2,7 @@ import type { PlaywrightTestConfig } from '@playwright/test'
 
 const config: PlaywrightTestConfig = {
   webServer: {
-    command: 'npm run dev',
+    command: 'MOCK_EXPORT=1 npm run dev',
     port: 3000,
     reuseExistingServer: true,
   },
