@@ -219,6 +219,11 @@ pnpm install
 pnpm test
 ```
 
+Die Playwright-Konfiguration liest zwei optionale Variablen:
+
+- `HEADLESS` – auf `false` setzen, um den Browser sichtbar zu starten
+- `PLAYWRIGHT_BASE_URL` – Basis-URL der Anwendung, z. B. in der CI
+
 - **`projects`** - Baustellen/Projekte
 - **`materials`** - Materialstammdaten
 - **`entries`** - Arbeitseinträge und Zeiterfassung
@@ -312,6 +317,10 @@ npm run type-check   # TypeScript Überprüfung
 - Testen Sie Ihre Änderungen gründlich
 - Dokumentieren Sie neue Features
 
+
+## Lizenz
+
+Der Quellcode steht unter einer proprietären Lizenz. Siehe [LICENSE](./LICENSE).
 ## 🆘 Support & Hilfe
 
 ### Dokumentation:
