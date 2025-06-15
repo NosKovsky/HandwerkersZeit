@@ -212,6 +212,13 @@ Ohne diese Schritte schlagen `npm test` und `npm run lint` fehl.
 
 ### Haupttabellen:
 - **`profiles`** - Benutzerprofile und Rollen
+## 🧪 Tests ausführen
+
+```bash
+pnpm install
+pnpm test
+```
+
 - **`projects`** - Baustellen/Projekte
 - **`materials`** - Materialstammdaten
 - **`entries`** - Arbeitseinträge und Zeiterfassung
