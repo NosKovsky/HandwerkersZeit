@@ -1,8 +1,8 @@
 {
   "name": "my-v0-project",
   "version": "0.1.0",
-  "license": "SEE LICENSE IN LICENSE",
   "private": true,
+  "license": "SEE LICENSE",
   "engines": { "node": ">=18" },
   "scripts": {
     "dev": "next dev",
