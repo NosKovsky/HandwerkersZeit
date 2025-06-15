@@ -71,6 +71,8 @@ Nach Klick auf **Exportieren** erstellt die Anwendung die Datei und startet auto
 
 2. **Dependencies installieren**
    \`\`\`bash
+   pnpm install   # empfohlen, wird auch in der CI genutzt
+   # oder
    npm install
    # oder
    yarn install
@@ -274,6 +276,18 @@ npm run type-check   # TypeScript Überprüfung
 - **Prettier** - Code-Formatierung
 - **Husky** - Git Hooks (geplant)
 
+## 🧪 Tests ausführen
+
+```bash
+pnpm install
+pnpm test
+```
+
+Die Playwright-Konfiguration liest zwei optionale Variablen:
+
+- `HEADLESS` – auf `false` setzen, um den Browser sichtbar zu starten
+- `PLAYWRIGHT_BASE_URL` – Basis-URL der Anwendung, z. B. in der CI
+
 ## 🧪 Testing (Geplant)
 
 - **Jest** - Unit Tests
@@ -303,10 +317,6 @@ Die Testausführung erfolgt in der CI (`npm test`). In der Codex-Umgebung kann d
 - Schreiben Sie aussagekräftige Commit-Messages
 - Testen Sie Ihre Änderungen gründlich
 - Dokumentieren Sie neue Features
-
-## 📄 Lizenz
-
-Dieses Projekt steht unter der MIT Lizenz. Siehe [LICENSE](LICENSE) Datei für Details.
 
 ## 🆘 Support & Hilfe
 
@@ -359,4 +369,3 @@ Dieses Projekt steht unter der MIT Lizenz. Siehe [LICENSE](LICENSE) Datei für D
 - **Tailwind CSS** - Styling Framework
 
 ---
-

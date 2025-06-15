@@ -73,6 +73,26 @@ export async function updateBaustelle(id: string, baustelleData: BaustelleInsert
 }
 
 export async function getBaustellen() {
+  if (process.env.MOCK_EXPORT) {
+    return {
+      data: [
+        {
+          id: "1",
+          name: "Test-Baustelle",
+          address: "Teststraße 1",
+          description: null,
+          created_by: "1",
+          status: "Aktiv",
+          customer_id: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          profiles: { full_name: "Tester" },
+          customers: null,
+        } as Baustelle,
+      ],
+    }
+  }
+
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data, error } = await supabase

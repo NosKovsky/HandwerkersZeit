@@ -21,6 +21,13 @@ export type ExportOptions = {
 }
 
 export async function exportBaustellenData(options: ExportOptions) {
+  if (process.env.MOCK_EXPORT) {
+    return {
+      success: true,
+      data: 'col1,col2\n',
+      filename: 'data.csv'
+    }
+  }
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const {
