@@ -61,6 +61,8 @@ Eine moderne, KI-gestützte Web-Anwendung zur digitalen Dokumentation und Verwal
 
 2. **Dependencies installieren**
    \`\`\`bash
+   pnpm install   # empfohlen, wird auch in der CI genutzt
+   # oder
    npm install
    # oder
    yarn install
@@ -263,10 +265,6 @@ npm run type-check   # TypeScript Überprüfung
 - Schreiben Sie aussagekräftige Commit-Messages
 - Testen Sie Ihre Änderungen gründlich
 - Dokumentieren Sie neue Features
-
-## 📄 Lizenz
-
-Dieses Projekt steht unter der MIT Lizenz. Siehe [LICENSE](LICENSE) Datei für Details.
 
 ## 🆘 Support & Hilfe
 

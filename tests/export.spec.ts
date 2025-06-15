@@ -13,7 +13,7 @@ async function mockExport(page: Page) {
   })
 }
 
-test.skip('Export-Dialog lädt CSV herunter', async ({ page }) => {
+test('Export-Dialog lädt CSV herunter', async ({ page }) => {
   await mockExport(page)
   await page.goto('/baustellen/export')
   await page.getByRole('button', { name: 'Exportieren' }).first().click()
