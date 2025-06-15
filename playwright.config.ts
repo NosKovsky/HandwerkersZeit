@@ -6,6 +6,7 @@ const config: PlaywrightTestConfig = {
     port: 3000,
     reuseExistingServer: true,
   },
+  testMatch: /.*\.spec\.ts/,
   use: {
     baseURL: 'http://localhost:3000',
     headless: true,
