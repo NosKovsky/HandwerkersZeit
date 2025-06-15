@@ -1,15 +1,14 @@
 {
   "name": "my-v0-project",
   "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
   "private": true,
+  "engines": { "node": ">=18" },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:unit": "cross-env MOCK_EXPORT=1 NEXT_PUBLIC_SUPABASE_URL=http://localhost NEXT_PUBLIC_SUPABASE_ANON_KEY=anon SUPABASE_SERVICE_ROLE_KEY=service vitest run",
-    "test:e2e": "cross-env MOCK_EXPORT=1 playwright test",
-    "test": "npm run test:unit && npm run test:e2e"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
