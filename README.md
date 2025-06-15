@@ -280,6 +280,7 @@ npm run type-check   # TypeScript Überprüfung
 - **React Testing Library** - Component Tests
 - **Cypress** - E2E Tests
 - **Playwright** - Browser Tests
+Die Testausführung erfolgt in der CI (`npm test`). In der Codex-Umgebung kann dieser Schritt übersprungen werden.
 
 ## 📊 Monitoring & Analytics (Geplant)
 
